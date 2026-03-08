@@ -1,13 +1,12 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
-import { NzMenuModule } from 'ng-zorro-antd/menu';
+import { COMMON_IMPORTS } from './shared-imports';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterModule, CommonModule, NzLayoutModule, NzMenuModule],
+  imports: [RouterModule, NzLayoutModule, ...COMMON_IMPORTS],
   template: `
     <nz-layout class="app-layout">
       <nz-sider nzWidth="200px">

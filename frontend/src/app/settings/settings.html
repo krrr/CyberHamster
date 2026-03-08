@@ -1,25 +1,34 @@
 <div class="settings-container">
-  <h2>System Settings</h2>
-
+  <h2>Settings</h2>
   <form nz-form nzLayout="vertical">
     <nz-form-item>
-      <nz-form-label>FFmpeg Path</nz-form-label>
-      <nz-form-control nzExtra="Absolute path to ffmpeg executable or 'ffmpeg' if in PATH">
-        <input nz-input [(ngModel)]="settings.ffmpeg_path" name="ffmpeg_path" />
-      </nz-form-control>
-    </nz-form-item>
-
-    <nz-form-item>
-      <nz-form-label>ImageMagick Path</nz-form-label>
-      <nz-form-control nzExtra="Absolute path to magick executable or 'magick' if in PATH">
-        <input nz-input [(ngModel)]="settings.imagemagick_path" name="imagemagick_path" />
-      </nz-form-control>
-    </nz-form-item>
-
-    <nz-form-item>
+      <nz-form-label>FFmpeg Executable Path</nz-form-label>
       <nz-form-control>
-        <button nz-button nzType="primary" (click)="saveSettings()">Save Settings</button>
+        <input
+          nz-input
+          [ngModel]="settings().ffmpeg_path"
+          (ngModelChange)="updateField('ffmpeg_path', $event)"
+          name="ffmpeg"
+          placeholder="ffmpeg"
+        />
       </nz-form-control>
     </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label>ImageMagick (magick) Path</nz-form-label>
+      <nz-form-control>
+        <input
+          nz-input
+          [ngModel]="settings().imagemagick_path"
+          (ngModelChange)="updateField('imagemagick_path', $event)"
+          name="magick"
+          placeholder="magick"
+        />
+      </nz-form-control>
+    </nz-form-item>
+
+    <button nz-button nzType="primary" (click)="saveSettings()">
+      <nz-icon nzType="save" nzTheme="outline"/>Save
+    </button>
   </form>
 </div>

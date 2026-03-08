@@ -1,25 +1,23 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../api.service';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { COMMON_IMPORTS } from '../shared-imports';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, NzFormModule, NzInputModule, NzButtonModule],
+  imports: [FormsModule, NzFormModule, NzInputModule, ...COMMON_IMPORTS],
   templateUrl: './settings.html',
   styleUrls: ['./settings.css']
 })
 export class SettingsComponent implements OnInit {
-  settings: any = {
+  settings = signal({
     ffmpeg_path: 'ffmpeg',
     imagemagick_path: 'magick',
-    exiftool_path: 'exiftool'
-  };
+  });
 
   constructor(private apiService: ApiService, private message: NzMessageService) {}
 
@@ -30,14 +28,18 @@ export class SettingsComponent implements OnInit {
   loadSettings() {
     this.apiService.getSettings().subscribe(s => {
       if (s) {
-        this.settings = s;
+        this.settings.set(s);
       }
     });
   }
 
   saveSettings() {
-    this.apiService.updateSettings(this.settings).subscribe(() => {
+    this.apiService.updateSettings(this.settings()).subscribe(() => {
       this.message.success('Settings saved successfully!');
     });
+  }
+
+  updateField(field: string, value: string) {
+    this.settings.update(s => ({ ...s, [field]: value }));
   }
 }

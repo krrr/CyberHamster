@@ -1,10 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../api.service';
 import { Router } from '@angular/router';
 import { NzTableModule } from 'ng-zorro-antd/table';
-import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
@@ -12,37 +10,37 @@ import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
+import { COMMON_IMPORTS } from '../shared-imports';
 
 @Component({
   selector: 'app-tasks',
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     NzTableModule,
-    NzButtonModule,
     NzModalModule,
     NzFormModule,
     NzInputModule,
     NzPopconfirmModule,
     NzTagModule,
-    NzDividerModule
+    NzDividerModule,
+    ...COMMON_IMPORTS
   ],
   templateUrl: './tasks.html',
   styleUrls: ['./tasks.css']
 })
 export class TasksComponent implements OnInit {
-  tasks: any[] = [];
+  tasks = signal<any[]>([]);
 
-  isModalVisible = false;
-  isEditing = false;
-  editingTaskId: number | null = null;
+  isModalVisible = signal(false);
+  isEditing = signal(false);
+  editingTaskId = signal<number | null>(null);
 
-  taskForm: any = {
+  taskForm = signal({
     name: '',
     watch_folder: '',
     status: 'active'
-  };
+  });
 
   constructor(
     private apiService: ApiService,
@@ -56,60 +54,61 @@ export class TasksComponent implements OnInit {
 
   loadTasks() {
     this.apiService.getTasks().subscribe(tasks => {
-      this.tasks = tasks;
+      this.tasks.set(tasks);
     });
   }
 
   showModal(task?: any) {
     if (task) {
-      this.isEditing = true;
-      this.editingTaskId = task.id;
-      this.taskForm = {
+      this.isEditing.set(true);
+      this.editingTaskId.set(task.id);
+      this.taskForm.set({
         name: task.name,
         watch_folder: task.watch_folder,
         status: task.status
-      };
+      });
     } else {
-      this.isEditing = false;
-      this.editingTaskId = null;
-      this.taskForm = { name: '', watch_folder: '', status: 'active' };
+      this.isEditing.set(false);
+      this.editingTaskId.set(null);
+      this.taskForm.set({ name: '', watch_folder: '', status: 'active' });
     }
-    this.isModalVisible = true;
+    this.isModalVisible.set(true);
   }
 
   handleCancel() {
-    this.isModalVisible = false;
+    this.isModalVisible.set(false);
   }
 
   handleOk() {
-    if (!this.taskForm.name || !this.taskForm.watch_folder) {
+    const currentForm = this.taskForm();
+    if (!currentForm.name || !currentForm.watch_folder) {
       this.message.warning("Please fill all required fields");
       return;
     }
 
-    if (this.isEditing && this.editingTaskId) {
-      this.apiService.updateTask(this.editingTaskId, this.taskForm).subscribe(() => {
+    if (this.isEditing() && this.editingTaskId()) {
+      this.apiService.updateTask(this.editingTaskId()!, currentForm).subscribe(() => {
         this.message.success('Task updated');
         this.loadTasks();
-        this.isModalVisible = false;
+        this.isModalVisible.set(false);
       });
     } else {
       // Create empty DAG first
       const dagPayload = {
-        name: `${this.taskForm.name} DAG`,
-        description: `DAG for task ${this.taskForm.name}`,
+        name: `${currentForm.name} DAG`,
+        description: `DAG for task ${currentForm.name}`,
         json_data: { nodes: {}, edges: [], start_node: null }
       };
 
       this.apiService.createDag(dagPayload).subscribe(newDag => {
         const newTask = {
-          ...this.taskForm,
+          ...currentForm,
           dag_id: newDag.id
         };
         this.apiService.createTask(newTask).subscribe(() => {
           this.message.success('Task created');
           this.loadTasks();
-          this.isModalVisible = false;
+          this.isModalVisible.set(false);
         });
       });
     }
@@ -131,6 +130,10 @@ export class TasksComponent implements OnInit {
   }
 
   openEditor(taskId: number) {
-    this.router.navigate(['/editor', taskId]);
+    this.router.navigate(['/tasks', taskId, 'editor']);
+  }
+
+  updateForm(field: string, value: any) {
+    this.taskForm.update(prev => ({ ...prev, [field]: value }));
   }
 }

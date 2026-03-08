@@ -7,8 +7,14 @@ import { en_US, provideNzI18n } from 'ng-zorro-antd/i18n';
 import { registerLocaleData } from '@angular/common';
 import en from '@angular/common/locales/en';
 import { FormsModule } from '@angular/forms';
+import { IconDefinition } from '@ant-design/icons-angular';
+import { provideNzIcons } from 'ng-zorro-antd/icon';
+import { SaveOutline, AlertFill, AlertOutline } from '@ant-design/icons-angular/icons';
 
 registerLocaleData(en);
+
+const icons: IconDefinition[] = [SaveOutline, AlertOutline, AlertFill];
+
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,6 +22,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideAnimationsAsync(),
     provideNzI18n(en_US),
-    importProvidersFrom(FormsModule)
+    importProvidersFrom(FormsModule),
+    provideNzIcons(icons),
   ]
 };

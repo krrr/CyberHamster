@@ -1,0 +1,1 @@
+前端使用最新版本angular，已经默认开启zoneless写法，需要双向绑定的变量请用signal。

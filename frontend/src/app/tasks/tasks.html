@@ -4,7 +4,7 @@
     <button nz-button nzType="primary" (click)="showModal()">Create New Task</button>
   </div>
 
-  <nz-table #basicTable [nzData]="tasks">
+  <nz-table #basicTable [nzData]="tasks()">
     <thead>
       <tr>
         <th>ID</th>
@@ -49,8 +49,9 @@
   </nz-table>
 
   <nz-modal
-    [(nzVisible)]="isModalVisible"
-    [nzTitle]="isEditing ? 'Edit Task' : 'Create New Task'"
+    [nzVisible]="isModalVisible()"
+    (nzVisibleChange)="isModalVisible.set($event)"
+    [nzTitle]="isEditing() ? 'Edit Task' : 'Create New Task'"
     (nzOnCancel)="handleCancel()"
     (nzOnOk)="handleOk()"
   >
@@ -59,14 +60,26 @@
         <nz-form-item>
           <nz-form-label nzRequired>Name</nz-form-label>
           <nz-form-control nzErrorTip="Please input the task name!">
-            <input nz-input [(ngModel)]="taskForm.name" name="name" placeholder="Task Name" />
+            <input
+              nz-input
+              [ngModel]="taskForm().name"
+              (ngModelChange)="updateForm('name', $event)"
+              name="name"
+              placeholder="Task Name"
+            />
           </nz-form-control>
         </nz-form-item>
 
         <nz-form-item>
           <nz-form-label nzRequired>Watch Folder (Absolute path)</nz-form-label>
           <nz-form-control nzErrorTip="Please input the watch folder path!">
-            <input nz-input [(ngModel)]="taskForm.watch_folder" name="watch_folder" placeholder="/path/to/folder" />
+            <input
+              nz-input
+              [ngModel]="taskForm().watch_folder"
+              (ngModelChange)="updateForm('watch_folder', $event)"
+              name="watch_folder"
+              placeholder="/path/to/folder"
+            />
           </nz-form-control>
         </nz-form-item>
       </form>

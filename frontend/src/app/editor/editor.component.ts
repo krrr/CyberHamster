@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Injector, OnDestroy } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Injector, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -44,21 +44,21 @@ type AreaExtra = AngularArea2D<Schemes>;
 })
 export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('rete') container!: ElementRef<HTMLElement>;
-  logs: string[] = [];
+  logs = signal<string[]>([]);
   private logSubscription: Subscription | undefined;
   private routeSub: Subscription | undefined;
   
   editor = new NodeEditor<Schemes>();
   area!: AreaPlugin<Schemes, AreaExtra>;
-  selectedNode: any = null;
-  nodeConfigs: { [id: string]: any } = {};
+  selectedNode = signal<any>(null);
+  nodeConfigs = signal<{ [id: string]: any }>({});
 
-  taskId: number | null = null;
-  selectedDagId: number | null = null;
+  taskId = signal<number | null>(null);
+  selectedDagId = signal<number | null>(null);
 
-  isExecuteModalVisible = false;
-  isLogsModalVisible = false;
-  executeFilePath: string = '';
+  isExecuteModalVisible = signal(false);
+  isLogsModalVisible = signal(false);
+  executeFilePath = signal('');
 
   availableNodes = [
     { type: 'ReadInputNode', label: 'Read Input Metadata' },
@@ -80,24 +80,25 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   ngOnInit() {
     this.apiService.connectLogsWebSocket();
     this.logSubscription = this.apiService.logs$.subscribe(log => {
-      this.logs.push(log);
+      this.logs.update(l => [...l, log]);
     });
 
     this.routeSub = this.route.paramMap.subscribe(params => {
       const idStr = params.get('taskId');
       if (idStr) {
-        this.taskId = +idStr;
+        this.taskId.set(+idStr);
         this.loadTaskAndDag();
       }
     });
   }
 
   loadTaskAndDag() {
-    if (!this.taskId) return;
+    const tid = this.taskId();
+    if (!tid) return;
     this.apiService.getTasks().subscribe(tasks => {
-      const task = tasks.find(t => t.id === this.taskId);
+      const task = tasks.find(t => t.id === tid);
       if (task && task.dag_id) {
-        this.selectedDagId = task.dag_id;
+        this.selectedDagId.set(task.dag_id);
         this.loadDag();
       }
     });
@@ -127,14 +128,14 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         const nodeId = context.data.id;
         const node = this.editor.getNode(nodeId);
         if (node) {
-          this.selectedNode = node;
-          if (!this.nodeConfigs[node.id]) {
-            this.nodeConfigs[node.id] = { name: node.label, config: {} };
+          this.selectedNode.set(node);
+          if (!this.nodeConfigs()[node.id]) {
+            this.nodeConfigs.update(configs => ({
+              ...configs,
+              [node.id]: { name: node.label, config: {} }
+            }));
           }
         }
-      } else if (context.type === 'pointerdown') {
-         // Optionally clear selection if clicked outside, but selectableNodes handles part of this
-         // For simplicity, keep selected until another is clicked
       }
       return context;
     });
@@ -147,14 +148,11 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     this.area.use(render);
 
     AreaExtensions.simpleNodesOrder(this.area);
-
-    // Initial load will happen via loadDag if dag_id exists
   }
 
   async addNode(nodeType: string) {
     const node = new ClassicPreset.Node(nodeType);
     
-    // Add default ports based on node type
     node.addInput('input', new ClassicPreset.Input(new ClassicPreset.Socket('Data')));
 
     if (nodeType === 'ConditionNode') {
@@ -165,58 +163,78 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     if (nodeType === 'ReadInputNode') {
-      node.removeInput('input'); // Start node usually doesn't need input
+      node.removeInput('input');
     }
 
     await this.editor.addNode(node);
 
-    // Initialize config entry
-    this.nodeConfigs[node.id] = { name: node.label, config: {} };
+    this.nodeConfigs.update(configs => ({
+      ...configs,
+      [node.id]: { name: node.label, config: {} }
+    }));
 
-    // Place node at center of view
     const center = this.area.area.pointer;
     await this.area.translate(node.id, { x: center.x, y: center.y });
   }
 
+  updateNodeName(nodeId: string, name: string) {
+    this.nodeConfigs.update(configs => ({
+      ...configs,
+      [nodeId]: { ...configs[nodeId], name }
+    }));
+  }
+
+  updateNodeConfig(nodeId: string, field: string, value: any) {
+    this.nodeConfigs.update(configs => ({
+      ...configs,
+      [nodeId]: {
+        ...configs[nodeId],
+        config: { ...configs[nodeId].config, [field]: value }
+      }
+    }));
+  }
+
   updateArgs(jsonString: string, nodeId: string) {
     try {
-      this.nodeConfigs[nodeId].config.args = JSON.parse(jsonString);
+      const args = JSON.parse(jsonString);
+      this.updateNodeConfig(nodeId, 'args', args);
     } catch (e) {
-      // Handle invalid JSON gracefully during typing
+      // Ignore invalid JSON during typing
     }
   }
 
   updateTags(jsonString: string, nodeId: string) {
     try {
-      this.nodeConfigs[nodeId].config.tags = JSON.parse(jsonString);
+      const tags = JSON.parse(jsonString);
+      this.updateNodeConfig(nodeId, 'tags', tags);
     } catch (e) {
-       // Handle invalid JSON
+       // Ignore
     }
   }
 
   showExecuteModal() {
-    this.isExecuteModalVisible = true;
+    this.isExecuteModalVisible.set(true);
   }
 
   handleExecuteCancel() {
-    this.isExecuteModalVisible = false;
+    this.isExecuteModalVisible.set(false);
   }
 
   handleExecuteOk() {
-    if (!this.executeFilePath) {
+    if (!this.executeFilePath()) {
       this.message.warning('Please enter a file path');
       return;
     }
-    this.isExecuteModalVisible = false;
+    this.isExecuteModalVisible.set(false);
     this.executeDag();
   }
 
   executeDag() {
     const dag = this.serializeDag();
-    this.logs = []; // clear previous logs
-    this.isLogsModalVisible = true; // show logs modal
+    this.logs.set([]);
+    this.isLogsModalVisible.set(true);
 
-    this.apiService.executeDag(dag, this.executeFilePath, this.selectedDagId || undefined).subscribe({
+    this.apiService.executeDag(dag, this.executeFilePath(), this.selectedDagId() || undefined).subscribe({
       next: (res) => console.log('Execution response:', res),
       error: (err) => {
         console.error('Execution error:', err);
@@ -226,16 +244,16 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   handleLogsClose() {
-    this.isLogsModalVisible = false;
+    this.isLogsModalVisible.set(false);
   }
 
   serializeDag() {
     const nodes = this.editor.getNodes();
     const connections = this.editor.getConnections();
+    const currentConfigs = this.nodeConfigs();
 
     const dagJson: any = { nodes: {}, edges: [], start_node: null };
 
-    // Determine start node (node with no inputs or explicitly ReadInputNode)
     const readNodes = nodes.filter(n => n.label === 'ReadInputNode');
     if (readNodes.length > 0) {
       dagJson.start_node = readNodes[0].id;
@@ -244,7 +262,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     nodes.forEach(node => {
-      const config = this.nodeConfigs[node.id];
+      const config = currentConfigs[node.id];
       dagJson.nodes[node.id] = {
         type: node.label,
         name: config?.name || node.label,
@@ -264,47 +282,46 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   saveDag() {
-    if (!this.selectedDagId) {
+    const dagId = this.selectedDagId();
+    if (!dagId) {
       this.message.error('No DAG ID associated with this task');
       return;
     }
 
     const dagJson = this.serializeDag();
 
-    // In our new flow, we update the existing DAG created during task creation.
-    // We get the current DAG to keep its name, then update JSON.
-    this.apiService.getDag(this.selectedDagId).subscribe(currentDag => {
+    this.apiService.getDag(dagId).subscribe(currentDag => {
       const payload = {
         name: currentDag.name,
         description: currentDag.description,
         json_data: dagJson
       };
 
-      this.apiService.updateDag(this.selectedDagId!, payload).subscribe(() => {
+      this.apiService.updateDag(dagId, payload).subscribe(() => {
         this.message.success('DAG Saved successfully');
       });
     });
   }
 
   async loadDag() {
-    if (!this.selectedDagId) return;
+    const dagId = this.selectedDagId();
+    if (!dagId) return;
 
-    this.apiService.getDag(this.selectedDagId).subscribe(async dagDef => {
+    this.apiService.getDag(dagId).subscribe(async dagDef => {
       await this.editor.clear();
-      this.nodeConfigs = {};
-      this.selectedNode = null;
+      this.nodeConfigs.set({});
+      this.selectedNode.set(null);
 
       const dagJson = dagDef.json_data;
       if (!dagJson || !dagJson.nodes) return;
 
       const nodeMap = new Map<string, any>();
+      const newConfigs: { [id: string]: any } = {};
 
-      // Reconstruct nodes
       for (const [id, nodeData] of Object.entries<any>(dagJson.nodes)) {
         const node = new ClassicPreset.Node(nodeData.type);
         node.id = id;
 
-        // Setup inputs/outputs
         if (nodeData.type !== 'ReadInputNode') {
           node.addInput('input', new ClassicPreset.Input(new ClassicPreset.Socket('Data')));
         }
@@ -316,12 +333,13 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
           node.addOutput('default', new ClassicPreset.Output(new ClassicPreset.Socket('Data')));
         }
 
-        this.nodeConfigs[node.id] = { name: nodeData.name, config: nodeData.config || {} };
+        newConfigs[node.id] = { name: nodeData.name, config: nodeData.config || {} };
         nodeMap.set(id, node);
         await this.editor.addNode(node);
       }
 
-      // Reconstruct edges
+      this.nodeConfigs.set(newConfigs);
+
       for (const edge of dagJson.edges) {
         const sourceNode = nodeMap.get(edge.source);
         const targetNode = nodeMap.get(edge.target);
@@ -331,7 +349,6 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         }
       }
 
-      // Basic layout (in real app, you'd want to save coordinates or use an auto-layout plugin)
       let x = 0;
       for (const node of Array.from(nodeMap.values())) {
         await this.area.translate(node.id, { x: x, y: 0 });
