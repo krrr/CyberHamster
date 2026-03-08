@@ -1,17 +1,25 @@
 <div class="settings-container">
   <h2>System Settings</h2>
 
-  <div class="form-group">
-    <label>FFmpeg Path</label>
-    <input type="text" [(ngModel)]="settings.ffmpeg_path">
-    <small>Absolute path to ffmpeg executable or 'ffmpeg' if in PATH</small>
-  </div>
+  <form nz-form nzLayout="vertical">
+    <nz-form-item>
+      <nz-form-label>FFmpeg Path</nz-form-label>
+      <nz-form-control nzExtra="Absolute path to ffmpeg executable or 'ffmpeg' if in PATH">
+        <input nz-input [(ngModel)]="settings.ffmpeg_path" name="ffmpeg_path" />
+      </nz-form-control>
+    </nz-form-item>
 
-  <div class="form-group">
-    <label>ImageMagick Path</label>
-    <input type="text" [(ngModel)]="settings.imagemagick_path">
-    <small>Absolute path to magick executable or 'magick' if in PATH</small>
-  </div>
+    <nz-form-item>
+      <nz-form-label>ImageMagick Path</nz-form-label>
+      <nz-form-control nzExtra="Absolute path to magick executable or 'magick' if in PATH">
+        <input nz-input [(ngModel)]="settings.imagemagick_path" name="imagemagick_path" />
+      </nz-form-control>
+    </nz-form-item>
 
-  <button (click)="saveSettings()">Save Settings</button>
+    <nz-form-item>
+      <nz-form-control>
+        <button nz-button nzType="primary" (click)="saveSettings()">Save Settings</button>
+      </nz-form-control>
+    </nz-form-item>
+  </form>
 </div>

@@ -1,64 +1,61 @@
 import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { NzLayoutModule } from 'ng-zorro-antd/layout';
+import { NzMenuModule } from 'ng-zorro-antd/menu';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterModule, CommonModule],
+  imports: [RouterModule, CommonModule, NzLayoutModule, NzMenuModule],
   template: `
-    <div class="app-layout">
-      <nav class="sidebar">
-        <h2>CyberHamster</h2>
-        <ul>
-          <li><a routerLink="/editor" routerLinkActive="active">DAG Editor</a></li>
-          <li><a routerLink="/tasks" routerLinkActive="active">Tasks</a></li>
-          <li><a routerLink="/settings" routerLinkActive="active">Settings</a></li>
+    <nz-layout class="app-layout">
+      <nz-sider nzWidth="200px">
+        <div class="logo">
+          <h2>CyberHamster</h2>
+        </div>
+        <ul nz-menu nzTheme="dark" nzMode="inline">
+          <li nz-menu-item nzMatchRouter>
+            <a routerLink="/tasks">Tasks</a>
+          </li>
+          <li nz-menu-item nzMatchRouter>
+            <a routerLink="/settings">Settings</a>
+          </li>
         </ul>
-      </nav>
-      <main class="content">
-        <router-outlet></router-outlet>
-      </main>
-    </div>
+      </nz-sider>
+      <nz-layout>
+        <nz-content>
+          <div class="inner-content">
+            <router-outlet></router-outlet>
+          </div>
+        </nz-content>
+      </nz-layout>
+    </nz-layout>
   `,
   styles: [`
     .app-layout {
-      display: flex;
       height: 100vh;
-      font-family: Arial, sans-serif;
     }
-    .sidebar {
-      width: 200px;
-      background-color: #2c3e50;
-      color: white;
-      padding: 20px;
-    }
-    .sidebar h2 {
-      margin-top: 0;
-      margin-bottom: 30px;
-    }
-    .sidebar ul {
-      list-style-type: none;
-      padding: 0;
-    }
-    .sidebar li {
-      margin-bottom: 10px;
-    }
-    .sidebar a {
-      color: #ecf0f1;
-      text-decoration: none;
-      display: block;
-      padding: 10px;
-      border-radius: 4px;
-    }
-    .sidebar a:hover, .sidebar a.active {
-      background-color: #34495e;
-    }
-    .content {
-      flex-grow: 1;
-      overflow: hidden;
+    .logo {
+      height: 64px;
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .logo h2 {
+      margin: 0;
+      color: white;
+      font-size: 18px;
+    }
+    .inner-content {
+      padding: 24px;
+      background: #fff;
+      height: 100%;
+      overflow-y: auto;
+    }
+    nz-content {
+      background: #f0f2f5;
     }
   `]
 })

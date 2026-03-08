@@ -1,12 +1,22 @@
-import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Injector } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, ElementRef, OnInit, Injector, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { NodeEditor, GetSchemes, ClassicPreset } from 'rete';
 import { AreaPlugin, AreaExtensions } from 'rete-area-plugin';
 import { ConnectionPlugin, Presets as ConnectionPresets } from 'rete-connection-plugin';
 import { AngularPlugin, Presets, AngularArea2D } from 'rete-angular-plugin/18';
 import { ApiService } from '../api.service';
 import { Subscription } from 'rxjs';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzMenuModule } from 'ng-zorro-antd/menu';
+import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzSelectModule } from 'ng-zorro-antd/select';
+import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 
 type Schemes = GetSchemes<
   ClassicPreset.Node,
@@ -17,22 +27,38 @@ type AreaExtra = AngularArea2D<Schemes>;
 @Component({
   selector: 'app-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    NzButtonModule,
+    NzDropDownModule,
+    NzMenuModule,
+    NzModalModule,
+    NzFormModule,
+    NzInputModule,
+    NzSelectModule,
+    NzCheckboxModule
+  ],
   templateUrl: './editor.component.html',
   styleUrls: ['./editor.component.css']
 })
-export class EditorComponent implements AfterViewInit, OnInit {
+export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('rete') container!: ElementRef<HTMLElement>;
   logs: string[] = [];
   private logSubscription: Subscription | undefined;
+  private routeSub: Subscription | undefined;
   
   editor = new NodeEditor<Schemes>();
   area!: AreaPlugin<Schemes, AreaExtra>;
   selectedNode: any = null;
   nodeConfigs: { [id: string]: any } = {};
 
-  savedDags: any[] = [];
+  taskId: number | null = null;
   selectedDagId: number | null = null;
+
+  isExecuteModalVisible = false;
+  isLogsModalVisible = false;
+  executeFilePath: string = '';
 
   availableNodes = [
     { type: 'ReadInputNode', label: 'Read Input Metadata' },
@@ -44,25 +70,45 @@ export class EditorComponent implements AfterViewInit, OnInit {
     { type: 'FFmpegActionNode', label: 'FFmpeg Action' }
   ];
 
-  constructor(private apiService: ApiService, private injector: Injector) {}
+  constructor(
+    private apiService: ApiService,
+    private injector: Injector,
+    private route: ActivatedRoute,
+    private message: NzMessageService
+  ) {}
 
   ngOnInit() {
     this.apiService.connectLogsWebSocket();
     this.logSubscription = this.apiService.logs$.subscribe(log => {
       this.logs.push(log);
     });
-    this.loadDagsList();
+
+    this.routeSub = this.route.paramMap.subscribe(params => {
+      const idStr = params.get('taskId');
+      if (idStr) {
+        this.taskId = +idStr;
+        this.loadTaskAndDag();
+      }
+    });
   }
 
-  loadDagsList() {
-    this.apiService.getDags().subscribe(dags => {
-      this.savedDags = dags;
+  loadTaskAndDag() {
+    if (!this.taskId) return;
+    this.apiService.getTasks().subscribe(tasks => {
+      const task = tasks.find(t => t.id === this.taskId);
+      if (task && task.dag_id) {
+        this.selectedDagId = task.dag_id;
+        this.loadDag();
+      }
     });
   }
 
   ngOnDestroy() {
     if (this.logSubscription) {
       this.logSubscription.unsubscribe();
+    }
+    if (this.routeSub) {
+      this.routeSub.unsubscribe();
     }
   }
 
@@ -102,38 +148,7 @@ export class EditorComponent implements AfterViewInit, OnInit {
 
     AreaExtensions.simpleNodesOrder(this.area);
 
-    const n1 = new ClassicPreset.Node('ReadInputNode');
-    n1.addOutput('default', new ClassicPreset.Output(new ClassicPreset.Socket('Data')));
-    await this.editor.addNode(n1);
-
-    const n2 = new ClassicPreset.Node('ConvertNode');
-    n2.addInput('input', new ClassicPreset.Input(new ClassicPreset.Socket('Data')));
-    n2.addOutput('default', new ClassicPreset.Output(new ClassicPreset.Socket('Data')));
-    await this.editor.addNode(n2);
-
-    const n3 = new ClassicPreset.Node('CalculateCompressionNode');
-    n3.addInput('input', new ClassicPreset.Input(new ClassicPreset.Socket('Data')));
-    n3.addOutput('default', new ClassicPreset.Output(new ClassicPreset.Socket('Data')));
-    await this.editor.addNode(n3);
-
-    const n4 = new ClassicPreset.Node('ConditionNode');
-    n4.addInput('input', new ClassicPreset.Input(new ClassicPreset.Socket('Data')));
-    n4.addOutput('true_branch', new ClassicPreset.Output(new ClassicPreset.Socket('Data')));
-    n4.addOutput('false_branch', new ClassicPreset.Output(new ClassicPreset.Socket('Data')));
-    await this.editor.addNode(n4);
-
-    await this.editor.addConnection(new ClassicPreset.Connection(n1, 'default', n2, 'input'));
-    await this.editor.addConnection(new ClassicPreset.Connection(n2, 'default', n3, 'input'));
-    await this.editor.addConnection(new ClassicPreset.Connection(n3, 'default', n4, 'input'));
-
-    await this.area.translate(n1.id, { x: 0, y: 0 });
-    await this.area.translate(n2.id, { x: 250, y: 0 });
-    await this.area.translate(n3.id, { x: 500, y: 0 });
-    await this.area.translate(n4.id, { x: 750, y: 0 });
-
-    setTimeout(() => {
-      AreaExtensions.zoomAt(this.area, this.editor.getNodes());
-    }, 100);
+    // Initial load will happen via loadDag if dag_id exists
   }
 
   async addNode(nodeType: string) {
@@ -179,13 +194,39 @@ export class EditorComponent implements AfterViewInit, OnInit {
     }
   }
 
+  showExecuteModal() {
+    this.isExecuteModalVisible = true;
+  }
+
+  handleExecuteCancel() {
+    this.isExecuteModalVisible = false;
+  }
+
+  handleExecuteOk() {
+    if (!this.executeFilePath) {
+      this.message.warning('Please enter a file path');
+      return;
+    }
+    this.isExecuteModalVisible = false;
+    this.executeDag();
+  }
+
   executeDag() {
     const dag = this.serializeDag();
-    const mockFilePath = "tests/test.jpg"; // Path relative to backend root
-    this.apiService.executeDag(dag, mockFilePath).subscribe({
+    this.logs = []; // clear previous logs
+    this.isLogsModalVisible = true; // show logs modal
+
+    this.apiService.executeDag(dag, this.executeFilePath, this.selectedDagId || undefined).subscribe({
       next: (res) => console.log('Execution response:', res),
-      error: (err) => console.error('Execution error:', err)
+      error: (err) => {
+        console.error('Execution error:', err);
+        this.message.error('Execution failed');
+      }
     });
+  }
+
+  handleLogsClose() {
+    this.isLogsModalVisible = false;
   }
 
   serializeDag() {
@@ -223,30 +264,26 @@ export class EditorComponent implements AfterViewInit, OnInit {
   }
 
   saveDag() {
-    const dagJson = this.serializeDag();
-    let name = prompt("Enter DAG Name:", "My New DAG");
-    if (!name) return;
-
-    const payload = {
-      name: name,
-      description: "",
-      json_data: dagJson
-    };
-
-    if (this.selectedDagId) {
-      // Update
-      this.apiService.updateDag(this.selectedDagId, payload).subscribe(() => {
-        alert('DAG Updated successfully');
-        this.loadDagsList();
-      });
-    } else {
-      // Create
-      this.apiService.createDag(payload).subscribe(res => {
-        alert('DAG Saved successfully');
-        this.selectedDagId = res.id;
-        this.loadDagsList();
-      });
+    if (!this.selectedDagId) {
+      this.message.error('No DAG ID associated with this task');
+      return;
     }
+
+    const dagJson = this.serializeDag();
+
+    // In our new flow, we update the existing DAG created during task creation.
+    // We get the current DAG to keep its name, then update JSON.
+    this.apiService.getDag(this.selectedDagId).subscribe(currentDag => {
+      const payload = {
+        name: currentDag.name,
+        description: currentDag.description,
+        json_data: dagJson
+      };
+
+      this.apiService.updateDag(this.selectedDagId!, payload).subscribe(() => {
+        this.message.success('DAG Saved successfully');
+      });
+    });
   }
 
   async loadDag() {
