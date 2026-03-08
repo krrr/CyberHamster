@@ -2,30 +2,56 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../api.service';
+import { Router } from '@angular/router';
+import { NzTableModule } from 'ng-zorro-antd/table';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
+import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzTagModule } from 'ng-zorro-antd/tag';
+import { NzDividerModule } from 'ng-zorro-antd/divider';
 
 @Component({
   selector: 'app-tasks',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    NzTableModule,
+    NzButtonModule,
+    NzModalModule,
+    NzFormModule,
+    NzInputModule,
+    NzPopconfirmModule,
+    NzTagModule,
+    NzDividerModule
+  ],
   templateUrl: './tasks.html',
   styleUrls: ['./tasks.css']
 })
 export class TasksComponent implements OnInit {
   tasks: any[] = [];
-  dags: any[] = [];
 
-  newTask: any = {
+  isModalVisible = false;
+  isEditing = false;
+  editingTaskId: number | null = null;
+
+  taskForm: any = {
     name: '',
-    dag_id: null,
     watch_folder: '',
     status: 'active'
   };
 
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private router: Router,
+    private message: NzMessageService
+  ) {}
 
   ngOnInit() {
     this.loadTasks();
-    this.loadDags();
   }
 
   loadTasks() {
@@ -34,41 +60,77 @@ export class TasksComponent implements OnInit {
     });
   }
 
-  loadDags() {
-    this.apiService.getDags().subscribe(dags => {
-      this.dags = dags;
-    });
+  showModal(task?: any) {
+    if (task) {
+      this.isEditing = true;
+      this.editingTaskId = task.id;
+      this.taskForm = {
+        name: task.name,
+        watch_folder: task.watch_folder,
+        status: task.status
+      };
+    } else {
+      this.isEditing = false;
+      this.editingTaskId = null;
+      this.taskForm = { name: '', watch_folder: '', status: 'active' };
+    }
+    this.isModalVisible = true;
   }
 
-  getDagName(id: number): string {
-    const dag = this.dags.find(d => d.id === id);
-    return dag ? dag.name : 'Unknown';
+  handleCancel() {
+    this.isModalVisible = false;
   }
 
-  createTask() {
-    if (!this.newTask.name || !this.newTask.dag_id || !this.newTask.watch_folder) {
-      alert("Please fill all required fields");
+  handleOk() {
+    if (!this.taskForm.name || !this.taskForm.watch_folder) {
+      this.message.warning("Please fill all required fields");
       return;
     }
 
-    this.apiService.createTask(this.newTask).subscribe(() => {
-      this.loadTasks();
-      this.newTask = { name: '', dag_id: null, watch_folder: '', status: 'active' };
-    });
-  }
-
-  deleteTask(id: number) {
-    if (confirm("Are you sure you want to delete this task?")) {
-      this.apiService.deleteTask(id).subscribe(() => {
+    if (this.isEditing && this.editingTaskId) {
+      this.apiService.updateTask(this.editingTaskId, this.taskForm).subscribe(() => {
+        this.message.success('Task updated');
         this.loadTasks();
+        this.isModalVisible = false;
+      });
+    } else {
+      // Create empty DAG first
+      const dagPayload = {
+        name: `${this.taskForm.name} DAG`,
+        description: `DAG for task ${this.taskForm.name}`,
+        json_data: { nodes: {}, edges: [], start_node: null }
+      };
+
+      this.apiService.createDag(dagPayload).subscribe(newDag => {
+        const newTask = {
+          ...this.taskForm,
+          dag_id: newDag.id
+        };
+        this.apiService.createTask(newTask).subscribe(() => {
+          this.message.success('Task created');
+          this.loadTasks();
+          this.isModalVisible = false;
+        });
       });
     }
   }
 
-  toggleTaskStatus(task: any) {
-    const newStatus = task.status === 'active' ? 'paused' : 'active';
-    this.apiService.updateTask(task.id, { ...task, status: newStatus }).subscribe(() => {
+  deleteTask(id: number) {
+    this.apiService.deleteTask(id).subscribe(() => {
+      this.message.success('Task deleted');
       this.loadTasks();
     });
+  }
+
+  toggleTaskStatus(task: any) {
+    const newStatus = task.status === 'active' ? 'paused' : 'active';
+    this.apiService.updateTask(task.id, { status: newStatus }).subscribe(() => {
+      this.message.success(`Task ${newStatus === 'active' ? 'resumed' : 'paused'}`);
+      this.loadTasks();
+    });
+  }
+
+  openEditor(taskId: number) {
+    this.router.navigate(['/editor', taskId]);
   }
 }

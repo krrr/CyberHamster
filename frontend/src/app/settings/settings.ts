@@ -2,11 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../api.service';
+import { NzFormModule } from 'ng-zorro-antd/form';
+import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzMessageService } from 'ng-zorro-antd/message';
 
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NzFormModule, NzInputModule, NzButtonModule],
   templateUrl: './settings.html',
   styleUrls: ['./settings.css']
 })
@@ -17,7 +21,7 @@ export class SettingsComponent implements OnInit {
     exiftool_path: 'exiftool'
   };
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private message: NzMessageService) {}
 
   ngOnInit() {
     this.loadSettings();
@@ -33,7 +37,7 @@ export class SettingsComponent implements OnInit {
 
   saveSettings() {
     this.apiService.updateSettings(this.settings).subscribe(() => {
-      alert('Settings saved successfully!');
+      this.message.success('Settings saved successfully!');
     });
   }
 }
