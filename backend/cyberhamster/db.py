@@ -2,7 +2,7 @@ import os
 from sqlmodel import SQLModel, create_engine, Session
 
 # Database setup
-DATABASE_URL = "sqlite:///./cyberhamster.db"
+DATABASE_URL = "sqlite:///./app.db"
 engine = create_engine(DATABASE_URL, echo=False)
 
 def init_db():
