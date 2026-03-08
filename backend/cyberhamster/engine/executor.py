@@ -1,6 +1,7 @@
 from typing import Dict, Any, List
 from .context import FileContext
 from .nodes import NODE_TYPES
+from ..logger import logger
 
 class DAGExecutor:
     def __init__(self, dag_json: Dict[str, Any]):
@@ -38,7 +39,7 @@ class DAGExecutor:
                     config=node_data.get("config", {})
                 )
             else:
-                print(f"Unknown node type: {node_type}")
+                logger.error(f"Unknown node type: {node_type} for node {node_id}")
 
         # Build edges dictionary
         for edge in self.dag_json.get("edges", []):
@@ -57,22 +58,27 @@ class DAGExecutor:
         :param file_path: Path to the original file.
         :return: True if execution finished successfully (reached end or explicitly stopped gracefully).
         """
+        logger.info(f"Starting DAG execution for file: {file_path}")
         context = FileContext(original_file_path=file_path)
         current_node_id = self.start_node_id
+        
+        if not current_node_id:
+            logger.error("No start node defined in DAG.")
+            return False
         
         try:
             while current_node_id:
                 if current_node_id not in self.nodes:
-                    print(f"Error: Node {current_node_id} not found.")
+                    logger.error(f"Node {current_node_id} not found in node registry.")
                     return False
                     
                 current_node = self.nodes[current_node_id]
-                print(f"Executing node: {current_node.name} ({current_node_id})")
+                logger.info(f"--- Executing node: {current_node.name} (ID: {current_node_id}) ---")
                 
                 success, next_branch = current_node.execute(context)
                 
                 if not success:
-                    print(f"Node execution failed or explicitly stopped at {current_node.name}.")
+                    logger.warning(f"DAG execution halted at node: {current_node.name} (ID: {current_node_id})")
                     # Could handle specific failure logic or fallback branches here
                     return False
                     
@@ -81,12 +87,13 @@ class DAGExecutor:
                     current_node_id = self.edges[current_node_id][next_branch]
                 else:
                     # No outgoing edge for this branch, execution completes
+                    logger.info(f"No outgoing edge for branch '{next_branch}' from node {current_node_id}. Execution finished.")
                     current_node_id = None
                     
-            print(f"Successfully processed file: {file_path}")
+            logger.info(f"Successfully completed DAG execution for file: {file_path}")
             return True
         except Exception as e:
-            print(f"Exception during DAG execution: {e}")
+            logger.exception(f"Unexpected error during DAG execution for {file_path}: {e}")
             return False
         finally:
             context.cleanup()

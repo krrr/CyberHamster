@@ -60,18 +60,34 @@ export class EditorComponent implements AfterViewInit, OnInit {
 
     AreaExtensions.simpleNodesOrder(area);
 
-    const a = new ClassicPreset.Node('ReadInputNode');
-    a.addOutput('a', new ClassicPreset.Output(new ClassicPreset.Socket('Number')));
-    await this.editor.addNode(a);
+    const n1 = new ClassicPreset.Node('ReadInputNode');
+    n1.addOutput('default', new ClassicPreset.Output(new ClassicPreset.Socket('Data')));
+    await this.editor.addNode(n1);
 
-    const b = new ClassicPreset.Node('FFmpegActionNode');
-    b.addInput('b', new ClassicPreset.Input(new ClassicPreset.Socket('Number')));
-    await this.editor.addNode(b);
+    const n2 = new ClassicPreset.Node('ConvertNode');
+    n2.addInput('input', new ClassicPreset.Input(new ClassicPreset.Socket('Data')));
+    n2.addOutput('default', new ClassicPreset.Output(new ClassicPreset.Socket('Data')));
+    await this.editor.addNode(n2);
 
-    await this.editor.addConnection(new ClassicPreset.Connection(a, 'a', b, 'b'));
+    const n3 = new ClassicPreset.Node('CalculateCompressionNode');
+    n3.addInput('input', new ClassicPreset.Input(new ClassicPreset.Socket('Data')));
+    n3.addOutput('default', new ClassicPreset.Output(new ClassicPreset.Socket('Data')));
+    await this.editor.addNode(n3);
 
-    await area.translate(a.id, { x: 0, y: 0 });
-    await area.translate(b.id, { x: 270, y: 0 });
+    const n4 = new ClassicPreset.Node('ConditionNode');
+    n4.addInput('input', new ClassicPreset.Input(new ClassicPreset.Socket('Data')));
+    n4.addOutput('true_branch', new ClassicPreset.Output(new ClassicPreset.Socket('Data')));
+    n4.addOutput('false_branch', new ClassicPreset.Output(new ClassicPreset.Socket('Data')));
+    await this.editor.addNode(n4);
+
+    await this.editor.addConnection(new ClassicPreset.Connection(n1, 'default', n2, 'input'));
+    await this.editor.addConnection(new ClassicPreset.Connection(n2, 'default', n3, 'input'));
+    await this.editor.addConnection(new ClassicPreset.Connection(n3, 'default', n4, 'input'));
+
+    await area.translate(n1.id, { x: 0, y: 0 });
+    await area.translate(n2.id, { x: 250, y: 0 });
+    await area.translate(n3.id, { x: 500, y: 0 });
+    await area.translate(n4.id, { x: 750, y: 0 });
 
     setTimeout(() => {
       AreaExtensions.zoomAt(area, this.editor.getNodes());
@@ -79,23 +95,29 @@ export class EditorComponent implements AfterViewInit, OnInit {
   }
 
   executeDag() {
-    // Basic mock of retrieving JSON DAG for Scenario 2 from editor data
-    // In a full application, this would serialize the Rete.js editor nodes
+    // Scenario 1 DAG definition from test_scenario_1.py
     const dag = {
       "start_node": "node_1",
       "nodes": {
-        "node_1": {"type": "ReadInputNode", "name": "Read MP4", "config": {}},
-        "node_2": {"type": "FFmpegActionNode", "name": "Streamline Audio", "config": {
-            "args": "-map 0:v -map 0:a:0 -c:v copy -c:a aac -b:a 128k",
-            "extension": ".mp4"
-        }}
+          "node_1": {"type": "ReadInputNode", "name": "Read JPG", "config": {}},
+          "node_2": {"type": "ConvertNode", "name": "Convert AVIF", "config": {"tool": "imagemagick", "target_extension": ".avif"}},
+          "node_3": {"type": "CalculateCompressionNode", "name": "Calc Comp", "config": {}},
+          "node_4": {"type": "ConditionNode", "name": "Check Threshold", "config": {"variable": "compression_ratio", "operator": "<", "threshold": 0.8}},
+          "node_5": {"type": "FileOperationNode", "name": "Replace", "config": {"action": "overwrite", "target_extension": ".avif"}},
+          "node_6": {"type": "FileOperationNode", "name": "Cleanup", "config": {"action": "cleanup"}},
+          "node_7": {"type": "MetadataWriteNode", "name": "Write Meta", "config": {"tags": {"XMP:ProcessingStatus": "LowCompression_Skipped"}, "write_to_original": true}}
       },
       "edges": [
-          {"source": "node_1", "target": "node_2", "branch": "default"}
+          {"source": "node_1", "target": "node_2", "branch": "default"},
+          {"source": "node_2", "target": "node_3", "branch": "default"},
+          {"source": "node_3", "target": "node_4", "branch": "default"},
+          {"source": "node_4", "target": "node_5", "branch": "true_branch"},
+          {"source": "node_4", "target": "node_6", "branch": "false_branch"},
+          {"source": "node_6", "target": "node_7", "branch": "default"}
       ]
     };
     
-    const mockFilePath = "dummy.mp4"; // Should come from a file picker or input
+    const mockFilePath = "tests/test.jpg"; // Path relative to backend root
     this.apiService.executeDag(dag, mockFilePath).subscribe({
       next: (res) => console.log('Execution response:', res),
       error: (err) => console.error('Execution error:', err)

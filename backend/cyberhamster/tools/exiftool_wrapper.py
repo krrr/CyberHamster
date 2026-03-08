@@ -1,6 +1,7 @@
 import subprocess
 import json
 from typing import Dict, Any, Optional
+from ..logger import logger
 
 class ExifToolWrapper:
     @staticmethod
@@ -19,7 +20,7 @@ class ExifToolWrapper:
                 return data[0]
             return {}
         except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
-            print(f"Exiftool read error: {e}")
+            logger.error(f"Exiftool read error for {file_path}: {e}")
             return None
 
     @staticmethod
@@ -40,5 +41,5 @@ class ExifToolWrapper:
             subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
             return True
         except subprocess.CalledProcessError as e:
-            print(f"Exiftool write error: {e.stderr}")
+            logger.error(f"Exiftool write error for {file_path}: {e.stderr}")
             return False

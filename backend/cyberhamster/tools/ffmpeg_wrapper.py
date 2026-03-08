@@ -1,5 +1,6 @@
 import subprocess
 from typing import List
+from ..logger import logger
 
 class FFmpegWrapper:
     @staticmethod
@@ -18,5 +19,5 @@ class FFmpegWrapper:
             result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
             return True
         except subprocess.CalledProcessError as e:
-            print(f"FFmpeg error: {e.stderr}")
+            logger.error(f"FFmpeg error for {input_file}: {e.stderr}")
             return False

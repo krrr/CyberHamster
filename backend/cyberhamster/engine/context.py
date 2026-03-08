@@ -1,5 +1,6 @@
 import os
 from typing import Dict, Any, List
+from ..logger import logger
 
 class FileContext:
     def __init__(self, original_file_path: str):
@@ -46,4 +47,4 @@ class FileContext:
                 try:
                     os.remove(temp_file)
                 except Exception as e:
-                    print(f"Failed to remove temp file {temp_file}: {e}")
+                    logger.error(f"Failed to remove temp file {temp_file}: {e}")

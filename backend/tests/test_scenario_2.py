@@ -2,7 +2,7 @@ import pytest
 import os
 import tempfile
 from unittest.mock import patch
-from backend.engine.executor import DAGExecutor
+from cyberhamster.engine.executor import DAGExecutor
 
 @pytest.fixture
 def dummy_mp4():
@@ -36,9 +36,9 @@ SCENARIO_2_DAG = {
     ]
 }
 
-@patch('backend.tools.exiftool_wrapper.ExifToolWrapper.read_metadata')
-@patch('backend.tools.ffmpeg_wrapper.FFmpegWrapper.run')
-@patch('backend.tools.exiftool_wrapper.ExifToolWrapper.write_metadata')
+@patch('cyberhamster.tools.exiftool_wrapper.ExifToolWrapper.read_metadata')
+@patch('cyberhamster.tools.ffmpeg_wrapper.FFmpegWrapper.run')
+@patch('cyberhamster.tools.exiftool_wrapper.ExifToolWrapper.write_metadata')
 def test_scenario_2_success(mock_write_meta, mock_ffmpeg_run, mock_read_meta, dummy_mp4):
     mock_read_meta.return_value = {} # Not processed yet
     
