@@ -76,13 +76,16 @@
             <nz-form-item>
               <nz-form-label nzRequired>Watch Folder (Absolute path)</nz-form-label>
               <nz-form-control nzErrorTip="Please input the watch folder path!">
-                <input
-                  nz-input
-                  [ngModel]="folderForm().watch_folder"
-                  (ngModelChange)="updateForm('watch_folder', $event)"
-                  name="watch_folder"
-                  placeholder="/path/to/folder"
-                />
+                <div style="display: flex; gap: 8px;">
+                  <input
+                    nz-input
+                    [ngModel]="folderForm().watch_folder"
+                    (ngModelChange)="updateForm('watch_folder', $event)"
+                    name="watch_folder"
+                    placeholder="/path/to/folder"
+                  />
+                  <button nz-button nzType="default" type="button" (click)="openFileDialog()">Browse...</button>
+                </div>
               </nz-form-control>
             </nz-form-item>
 
@@ -143,4 +146,11 @@
       </form>
     </ng-container>
   </nz-modal>
+
+  <app-file-dialog
+    [(isVisible)]="isFileDialogVisible"
+    mode="folder"
+    [currentPath]="folderForm().watch_folder || null"
+    (fileSelected)="onFolderSelected($event)"
+  ></app-file-dialog>
 </div>

@@ -1,3 +1,5 @@
+import os
+import sys
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from typing import List, Any
@@ -127,6 +129,49 @@ def delete_folder(folder_id: int, session: Session = Depends(get_session)):
     task_manager.remove_folder(folder)
 
     return {"message": "Folder deleted successfully"}
+
+# --- File System ---
+
+@router.get("/fs/list")
+def list_directory(path: str = None, showHidden: bool = False):
+    if not path:
+        if sys.platform == 'win32':
+            import ctypes
+            drives = []
+            bitmask = ctypes.windll.kernel32.GetLogicalDrives()
+            for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                if bitmask & 1:
+                    drives.append({
+                        "name": f"{letter}:\\",
+                        "path": f"{letter}:\\",
+                        "is_dir": True
+                    })
+                bitmask >>= 1
+            return drives
+        else:
+            return [{"name": "/", "path": "/", "is_dir": True}]
+
+    if not os.path.exists(path) or not os.path.isdir(path):
+        raise HTTPException(status_code=400, detail="Invalid directory path")
+
+    try:
+        items = []
+        for name in os.listdir(path):
+            if not showHidden and name.startswith('.'):
+                continue
+            full_path = os.path.join(path, name)
+            is_dir = os.path.isdir(full_path)
+            items.append({
+                "name": name,
+                "path": full_path,
+                "is_dir": is_dir
+            })
+
+        # Sort directories first, then alphabetically
+        items.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))
+        return items
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # --- SystemSettings ---
 
