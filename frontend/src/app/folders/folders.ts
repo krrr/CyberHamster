@@ -14,6 +14,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { COMMON_IMPORTS } from '../shared-imports';
+import { FileDialogComponent } from '../components/file-dialog/file-dialog';
 
 @Component({
   selector: 'app-folders',
@@ -30,6 +31,7 @@ import { COMMON_IMPORTS } from '../shared-imports';
     NzSelectModule,
     NzCheckboxModule,
     NzTabsModule,
+    FileDialogComponent,
     ...COMMON_IMPORTS
   ],
   templateUrl: './folders.html',
@@ -42,6 +44,8 @@ export class FoldersComponent implements OnInit {
   isModalVisible = signal(false);
   isEditing = signal(false);
   editingFolderId = signal<number | null>(null);
+
+  isFileDialogVisible = false;
 
   folderForm = signal({
     name: '',
@@ -148,6 +152,14 @@ export class FoldersComponent implements OnInit {
 
   updateForm(field: string, value: any) {
     this.folderForm.update(prev => ({ ...prev, [field]: value }));
+  }
+
+  openFileDialog() {
+    this.isFileDialogVisible = true;
+  }
+
+  onFolderSelected(path: string) {
+    this.updateForm('watch_folder', path);
   }
 
   getTaskName(taskId: number): string {

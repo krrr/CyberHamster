@@ -59,6 +59,18 @@ export class ApiService {
     return this.http.put('/api/settings', settings);
   }
 
+  listDirectory(path?: string, showHidden: boolean = false): Observable<any[]> {
+    let url = '/api/fs/list';
+    let params: string[] = [];
+    if (path) params.push(`path=${encodeURIComponent(path)}`);
+    if (showHidden) params.push(`showHidden=true`);
+
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
+    return this.http.get<any[]>(url);
+  }
+
   connectLogsWebSocket(): void {
     if (this.socket) {
       this.socket.close();
