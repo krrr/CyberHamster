@@ -25,7 +25,13 @@ import {
   SettingOutline,
   CopyOutline,
   DeleteOutline,
-  LayoutOutline
+  LayoutOutline,
+  PlayCircleOutline,
+  MinusOutline,
+  PlusOutline,
+  FolderOutline,
+  ArrowUpOutline,
+  HomeOutline
 } from '@ant-design/icons-angular/icons';
 
 registerLocaleData(en);
@@ -47,6 +53,12 @@ const icons: IconDefinition[] = [
   CopyOutline,
   DeleteOutline,
   LayoutOutline,
+  PlayCircleOutline,
+  MinusOutline,
+  PlusOutline,
+  FolderOutline,
+  ArrowUpOutline,
+  HomeOutline,
 ];
 
 

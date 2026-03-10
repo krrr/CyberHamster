@@ -8,7 +8,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
   standalone: true,
   imports: [CommonModule, NzIconModule],
   templateUrl: './custom-node.html',
-  styleUrls: ['./custom-node.css']
+  styleUrls: ['./custom-node.scss']
 })
 export class CustomNodeComponent implements OnChanges, OnInit {
   @Input() data!: ClassicPreset.Node & { selected?: boolean };
@@ -19,7 +19,7 @@ export class CustomNodeComponent implements OnChanges, OnInit {
 
   get iconType(): string {
     switch (this.data.label) {
-      case 'StartNode': return 'play-circle';
+      case 'StartNode': return 'home';
       case 'FinishNode': return 'check-circle';
       case 'ReadInputNode': return 'folder-open';
       case 'ConvertNode': return 'sync';

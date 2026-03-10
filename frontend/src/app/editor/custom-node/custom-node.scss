@@ -4,10 +4,10 @@
 
 .node-wrapper {
   background: white;
-  border-radius: 8px;
+  border-radius: 2px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
   min-width: 220px;
-  border: 2px solid transparent;
+  border: 1px solid rgba(0, 0, 0, .06);
   transition: border-color 0.2s, box-shadow 0.2s;
   cursor: pointer;
   position: relative;

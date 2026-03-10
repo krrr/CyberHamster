@@ -44,7 +44,7 @@ type AreaExtra = AngularArea2D<Schemes>;
     ...COMMON_IMPORTS
   ],
   templateUrl: './editor.component.html',
-  styleUrls: ['./editor.component.css']
+  styleUrls: ['./editor.component.scss']
 })
 export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   @ViewChild('rete') container!: ElementRef<HTMLElement>;
@@ -68,7 +68,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   executeFilePath = signal('');
 
   availableNodes = [
-    { type: 'StartNode', label: 'Start (Input File)' },
+    // { type: 'StartNode', label: 'Start (Input File)' },
     { type: 'FinishNode', label: 'Finish / Output' },
     { type: 'ReadInputNode', label: 'Read Input Metadata' },
     { type: 'ConvertNode', label: 'Convert Format' },
@@ -128,7 +128,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     const render = new AngularPlugin<Schemes, AreaExtra>({ injector: this.injector });
 
     const selector = AreaExtensions.selector();
-    AreaExtensions.selectableNodes(this.area, selector, {
+    const selectableNodes = AreaExtensions.selectableNodes(this.area, selector, {
       accumulating: AreaExtensions.accumulateOnCtrl()
     });
 
@@ -145,18 +145,22 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
             }));
           }
         }
-      }
-
-      if (context.type === 'contextmenu') {
+      } else if (context.type === 'contextmenu') {
         const { event, context: target } = context.data;
         event.preventDefault();
         event.stopPropagation();
 
-        if (target !== 'root' && 'id' in target && this.editor.getNode(target.id)) {
-          this.selectedNode.set(target);
-        } else {
+        if (target !== 'root' && 'id' in target) {  // right click on node
+          const node = this.editor.getNode(target.id);
+          if (node) {
+            this.selectedNode.set(node);
+            selectableNodes.select(node.id, false);  // rete.js will cancel selected state, handle it
+          }
+        } else if (target === 'root') {
           this.selectedNode.set(null);
+          selector.unselectAll();
         }
+
         this.nzContextMenuService.create(event, this.contextMenu);
       }
       
@@ -232,7 +236,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     if (!node) return;
 
     if (node.label === 'StartNode') {
-        this.message.warning('Cannot clone Start node (only one allowed)');
+        this.message.error('Cannot clone Start node (only one allowed)');
         return;
     }
 
@@ -269,7 +273,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     if (!node) return;
 
     if (node.label === 'StartNode') {
-        this.message.warning('Cannot delete Start node. It is required.');
+        this.message.error('Cannot delete Start node. It is required.');
         return;
     }
 
@@ -287,7 +291,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     if (!node) return;
 
     if (node.label === 'StartNode' || newType === 'StartNode') {
-        this.message.warning('Cannot change to or from Start node');
+        this.message.error('Cannot change to or from Start node');
         return;
     }
 

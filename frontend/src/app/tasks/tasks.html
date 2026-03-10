@@ -6,16 +6,16 @@
 
   <div nz-row [nzGutter]="[16, 16]">
     <div nz-col [nzSpan]="8" *ngFor="let task of tasks()">
-      <nz-card style="width: 100%; border-radius: 8px;" nzHoverable>
+      <nz-card style="width: 100%; border-radius: 8px;" nzHoverable (click)="openEditor(task.id)">
         <div class="card-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-          <div style="display: flex; align-items: center; gap: 12px;" (click)="openEditor(task.id)">
+          <div style="display: flex; align-items: center; gap: 12px;" >
             <span nz-icon nzType="deployment-unit" nzTheme="outline" style="font-size: 32px; color: #1890ff;"></span>
             <div>
               <h3 style="margin: 0;">{{ task.name }}</h3>
               <span style="color: #8c8c8c; font-size: 12px;">ID: {{ task.id }}</span>
             </div>
           </div>
-          <button nz-button nzType="text" nz-dropdown [nzDropdownMenu]="menu">
+          <button nz-button nzType="text" nz-dropdown [nzDropdownMenu]="menu" (click)="$event.stopPropagation()">
             <span nz-icon nzType="more"></span>
           </button>
           <nz-dropdown-menu #menu="nzDropdownMenu">

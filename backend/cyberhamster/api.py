@@ -1,5 +1,6 @@
 import os
 import sys
+import ctypes
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from typing import List, Any
@@ -136,7 +137,6 @@ def delete_folder(folder_id: int, session: Session = Depends(get_session)):
 def list_directory(path: str = None, showHidden: bool = False):
     if not path:
         if sys.platform == 'win32':
-            import ctypes
             drives = []
             bitmask = ctypes.windll.kernel32.GetLogicalDrives()
             for letter in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
@@ -157,7 +157,9 @@ def list_directory(path: str = None, showHidden: bool = False):
     try:
         items = []
         for name in os.listdir(path):
-            if not showHidden and name.startswith('.'):
+            if sys.platform != 'win32' and (not showHidden and name.startswith('.')):
+                continue
+            elif sys.platform == 'win32' and (name == '$RECYCLE.BIN' or name == 'System Volume Information'):
                 continue
             full_path = os.path.join(path, name)
             is_dir = os.path.isdir(full_path)

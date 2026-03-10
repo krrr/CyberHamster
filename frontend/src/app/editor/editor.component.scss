@@ -19,19 +19,21 @@
   background: #f4f4f4;
   border-radius: 4px;
   padding: 2px;
-}
-.zoom-controls button {
-  min-width: 32px;
-  padding: 4px 8px;
-  font-weight: bold;
-}
-.zoom-indicator {
-  padding: 0 8px;
-  font-size: 12px;
-  font-family: monospace;
-  color: #555;
-  min-width: 45px;
-  text-align: center;
+
+  button {
+    min-width: 32px;
+    padding: 4px 8px;
+    font-weight: bold;
+  }
+  .zoom-indicator {
+    font-size: 12px;
+    font-weight: bold;
+    font-family: ui-monospace;
+    color: #555;
+    min-width: 45px;
+    text-align: center;
+    width: 48px;
+  }
 }
 .main-content {
   display: flex;
