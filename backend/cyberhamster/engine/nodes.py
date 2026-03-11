@@ -137,66 +137,59 @@ class ConvertNode(DAGNode):
         logger.error(f"[{self.name}] Conversion failed for {input_file}")
         return False, None, {}
 
-class CalculateCompressionNode(DAGNode):
-    """Calculates compression ratio."""
-    def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-        file_obj = inputs.get("file")
-        if not file_obj or "path" not in file_obj:
-            logger.error(f"[{self.name}] No valid input file object provided.")
-            return False, None, {}
-
-        original_file = context.original_file_path
-        current_file = file_obj["path"]
-        
-        if not os.path.exists(original_file):
-            logger.error(f"[{self.name}] Original file not found: {original_file}")
-            return False, None, {}
-        if not os.path.exists(current_file):
-            logger.error(f"[{self.name}] Current file not found: {current_file}")
-            return False, None, {}
-
-        try:
-            original_size = os.path.getsize(original_file)
-            current_size = os.path.getsize(current_file)
-            if original_size == 0:
-                ratio = 1.0
-                logger.warning(f"[{self.name}] Original file size is 0: {original_file}")
-            else:
-                ratio = current_size / original_size
-                
-            logger.info(f"[{self.name}] Compression ratio: {ratio:.4f} ({original_size} -> {current_size} bytes)")
-            return True, "default", {"file": file_obj, "compression_ratio": ratio}
-        except OSError as e:
-            logger.error(f"[{self.name}] Error calculating sizes: {e}")
-            return False, None, {}
-
 class ConditionNode(DAGNode):
-    """Evaluates a condition and branches."""
+    """Evaluates multiple conditions and branches."""
     def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-        var_name = self.config.get("variable")
-        operator = self.config.get("operator")
-        threshold = self.config.get("threshold")
+        conditions = self.config.get("conditions", [])
+        relation = self.config.get("relation", "and")
         
-        val = inputs.get(var_name)
-        if val is None:
-            logger.error(f"[{self.name}] Input data variable '{var_name}' not found.")
-            return False, None, {}
+        # Backward compatibility for old format
+        if not conditions:
+            var_name = self.config.get("variable")
+            if var_name:
+                conditions = [{
+                    "variable": var_name,
+                    "operator": self.config.get("operator"),
+                    "threshold": self.config.get("threshold")
+                }]
+
+        if not conditions:
+            logger.warning(f"[{self.name}] No conditions found, defaulting to False")
+            return True, "false_branch", dict(inputs)
             
-        result = False
-        if operator == "<":
-            result = val < threshold
-        elif operator == ">":
-            result = val > threshold
-        elif operator == "==":
-            result = val == threshold
-        else:
-            logger.error(f"[{self.name}] Unknown operator: {operator}")
-            return False, None, {}
+        results = []
+        for cond in conditions:
+            var_name = cond.get("variable")
+            operator = cond.get("operator")
+            threshold = cond.get("threshold")
+
+            val = inputs.get(var_name)
+            if val is None:
+                logger.error(f"[{self.name}] Input data variable '{var_name}' not found. Defaulting to False for this condition.")
+                results.append(False)
+                continue
+
+            res = False
+            try:
+                if operator == "<":
+                    res = val < threshold
+                elif operator == ">":
+                    res = val > threshold
+                elif operator == "==":
+                    res = val == threshold
+                else:
+                    logger.error(f"[{self.name}] Unknown operator: {operator}")
+            except Exception as e:
+                logger.error(f"[{self.name}] Error evaluating condition {var_name} {operator} {threshold} (value={val}): {e}")
+
+            results.append(res)
+            logger.info(f"[{self.name}] Evaluated {var_name} {operator} {threshold} (value={val}) -> {res}")
             
-        logger.info(f"[{self.name}] Condition '{var_name} {operator} {threshold}' (value={val}) evaluated to {result}")
+        final_result = all(results) if relation == "and" else any(results)
+        logger.info(f"[{self.name}] Final relation '{relation}' of {results} -> {final_result}")
         
         out_dict = dict(inputs)
-        if result:
+        if final_result:
             return True, "true_branch", out_dict
         else:
             return True, "false_branch", out_dict
@@ -287,6 +280,48 @@ class MetadataWriteNode(DAGNode):
             logger.error(f"[{self.name}] Failed to write metadata to {target_file}")
             return False, None, {}
 
+import ast
+
+class CodeEvalNode(DAGNode):
+    """Evaluates Python code. Similar to a multi-line lambda, returning the last expression's result. Reads variables via args."""
+    def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+        code_str = self.config.get("code", "")
+        output_var = self.config.get("output_var", "eval_result")
+
+        # args dictionary for code access
+        args = dict(inputs)
+        # Also provide useful context
+        args['original_file_path'] = context.original_file_path
+
+        local_vars = {"args": args, "os": os}
+
+        try:
+            tree = ast.parse(code_str)
+            if not tree.body:
+                logger.warning(f"[{self.name}] Empty code provided.")
+                return True, "default", dict(inputs)
+
+            last_stmt = tree.body[-1]
+            if isinstance(last_stmt, ast.Expr):
+                # If the last statement is an expression, evaluate it
+                exec_tree = ast.Module(body=tree.body[:-1], type_ignores=[])
+                exec(compile(exec_tree, filename="<ast>", mode="exec"), local_vars)
+                result = eval(compile(ast.Expression(body=last_stmt.value), filename="<ast>", mode="eval"), local_vars)
+            else:
+                # Execute everything
+                exec(compile(tree, filename="<ast>", mode="exec"), local_vars)
+                result = None
+
+            logger.info(f"[{self.name}] Code evaluated successfully. Result: {result}")
+            out_dict = dict(inputs)
+            out_dict[output_var] = result
+            return True, "default", out_dict
+
+        except Exception as e:
+            logger.error(f"[{self.name}] Code evaluation failed: {e}")
+            return False, None, {}
+
+
 class FFmpegActionNode(DAGNode):
     """Executes FFmpeg with specific parameters."""
     def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
@@ -331,7 +366,7 @@ NODE_TYPES = {
     "FinishNode": FinishNode,
     "ReadInputNode": ReadInputNode,
     "ConvertNode": ConvertNode,
-    "CalculateCompressionNode": CalculateCompressionNode,
+    "CodeEvalNode": CodeEvalNode,
     "ConditionNode": ConditionNode,
     "FileOperationNode": FileOperationNode,
     "MetadataWriteNode": MetadataWriteNode,

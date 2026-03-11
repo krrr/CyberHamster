@@ -21,8 +21,8 @@ SCENARIO_1_DAG = {
     "nodes": {
         "node_1": {"type": "ReadInputNode", "name": "Read JPG", "config": {}},
         "node_2": {"type": "ConvertNode", "name": "Convert AVIF", "config": {"tool": "imagemagick", "target_extension": ".avif"}},
-        "node_3": {"type": "CalculateCompressionNode", "name": "Calc Comp", "config": {}},
-        "node_4": {"type": "ConditionNode", "name": "Check Threshold", "config": {"variable": "compression_ratio", "operator": "<", "threshold": 0.8}},
+        "node_3": {"type": "CodeEvalNode", "name": "Calc Comp", "config": {"code": "import os\nos.path.getsize(args['file']['path']) / os.path.getsize(args['original_file_path'])", "output_var": "compression_ratio"}},
+        "node_4": {"type": "ConditionNode", "name": "Check Threshold", "config": {"relation": "and", "conditions": [{"variable": "compression_ratio", "operator": "<", "threshold": 0.8}]}},
         "node_5": {"type": "FileOperationNode", "name": "Replace", "config": {"action": "overwrite", "target_extension": ".avif"}},
         "node_6": {"type": "FileOperationNode", "name": "Cleanup", "config": {"action": "cleanup"}},
         "node_7": {"type": "MetadataWriteNode", "name": "Write Meta", "config": {"tags": {"XMP:ProcessingStatus": "LowCompression_Skipped"}, "write_to_original": True}}
