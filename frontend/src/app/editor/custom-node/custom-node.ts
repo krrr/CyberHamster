@@ -2,11 +2,12 @@ import { Component, Input, ChangeDetectorRef, OnInit, OnChanges } from '@angular
 import { ClassicPreset } from 'rete';
 import { CommonModule } from '@angular/common';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { ReteModule } from 'rete-angular-plugin/18';
 
 @Component({
   selector: 'app-custom-node',
   standalone: true,
-  imports: [CommonModule, NzIconModule],
+  imports: [CommonModule, NzIconModule, ReteModule],
   templateUrl: './custom-node.html',
   styleUrls: ['./custom-node.css']
 })

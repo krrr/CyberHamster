@@ -8,6 +8,7 @@ import { ConnectionPlugin, Presets as ConnectionPresets } from 'rete-connection-
 import { AutoArrangePlugin, Presets as ArrangePresets } from 'rete-auto-arrange-plugin';
 import { AngularPlugin, Presets, AngularArea2D } from 'rete-angular-plugin/18';
 import { CustomNodeComponent } from './custom-node/custom-node';
+import { CustomConnectionComponent } from './custom-connection/custom-connection';
 import { ApiService } from '../api.service';
 import { Subscription } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -57,6 +58,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   editor = new NodeEditor<Schemes>();
   area!: AreaPlugin<Schemes, AreaExtra>;
   selectedNode = signal<any>(null);
+  selectedConnection = signal<any>(null);
   nodeConfigs = signal<{ [id: string]: any }>({});
 
   taskId = signal<number | null>(null);
@@ -119,8 +121,35 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     if (this.routeSub) {
       this.routeSub.unsubscribe();
     }
-    document.removeEventListener('keydown', this.handleKeyDown.bind(this));
+    document.removeEventListener('keydown', this.handleKeyDownBind);
+    document.removeEventListener('connectionpicked', this.handleConnectionPicked);
+    document.removeEventListener('connectiondeleted', this.handleConnectionDeleted);
   }
+
+  private handleKeyDownBind = this.handleKeyDown.bind(this);
+  private handleConnectionPicked = (e: any) => {
+    const connId = e.detail.id;
+    const conn = this.editor.getConnections().find(c => c.id === connId);
+    if (conn) {
+      this.selectedNode.set(null); // deselect node
+
+      const prevConn = this.selectedConnection();
+      if (prevConn && prevConn.id !== connId) {
+          this.selectedConnection.set(null);
+          prevConn.selected = false;
+          this.area.update('connection', prevConn.id);
+      }
+
+      this.selectedConnection.set(conn);
+      (conn as any).selected = true;
+      this.area.update('connection', connId);
+    }
+  };
+  private handleConnectionDeleted = (e: any) => {
+    const connId = e.detail.id;
+    this.editor.removeConnection(connId);
+    this.selectedConnection.set(null);
+  };
 
   async ngAfterViewInit() {
     this.area = new AreaPlugin<Schemes, AreaExtra>(this.container.nativeElement);
@@ -133,11 +162,28 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     });
 
     this.area.addPipe(context => {
+      if (context.type === 'pointerdown') {
+         // Clear connection selection if clicking elsewhere
+         if (this.selectedConnection()) {
+           const prevConn = this.selectedConnection();
+           this.selectedConnection.set(null);
+           prevConn.selected = false;
+           this.area.update('connection', prevConn.id);
+         }
+      }
+
       if (context.type === 'nodepicked') {
         const nodeId = context.data.id;
         const node = this.editor.getNode(nodeId);
         if (node) {
           this.selectedNode.set(node);
+          // clear connection selection
+          if (this.selectedConnection()) {
+              const prevConn = this.selectedConnection();
+              this.selectedConnection.set(null);
+              prevConn.selected = false;
+              this.area.update('connection', prevConn.id);
+          }
           if (!this.nodeConfigs()[node.id]) {
             this.nodeConfigs.update(configs => ({
               ...configs,
@@ -167,6 +213,9 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
       customize: {
         node(context) {
           return CustomNodeComponent;
+        },
+        connection(context) {
+          return CustomConnectionComponent;
         }
       }
     }));
@@ -191,7 +240,9 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
     AreaExtensions.simpleNodesOrder(this.area);
 
-    document.addEventListener('keydown', this.handleKeyDown.bind(this));
+    document.addEventListener('keydown', this.handleKeyDownBind);
+    document.addEventListener('connectionpicked', this.handleConnectionPicked);
+    document.addEventListener('connectiondeleted', this.handleConnectionDeleted);
   }
 
   zoomIn() {
@@ -218,12 +269,17 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
   }
 
   handleKeyDown(e: KeyboardEvent) {
-    if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedNode()) {
+    if ((e.key === 'Delete' || e.key === 'Backspace')) {
       // Prevent deletion if an input/textarea is currently focused
       if (['INPUT', 'TEXTAREA'].includes((document.activeElement as HTMLElement)?.tagName)) {
          return;
       }
-      this.deleteSelectedNode();
+      if (this.selectedNode()) {
+        this.deleteSelectedNode();
+      } else if (this.selectedConnection()) {
+        this.editor.removeConnection(this.selectedConnection().id);
+        this.selectedConnection.set(null);
+      }
     }
   }
 

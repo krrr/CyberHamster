@@ -1,0 +1,36 @@
+:host {
+  display: block;
+}
+
+svg {
+  overflow: visible;
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.connection-path {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 5px;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.connection-path:hover {
+  stroke: #1890ff;
+  stroke-width: 6px;
+}
+
+.selected {
+  stroke: red;
+}
+
+.delete-btn {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.delete-btn:hover circle {
+  fill: #ff7875;
+}
