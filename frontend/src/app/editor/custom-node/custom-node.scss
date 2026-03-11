@@ -1,113 +1,119 @@
 :host {
-  display: block;
+    display: block;
 }
 
 .node-wrapper {
-  background: white;
-  border-radius: 2px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  min-width: 220px;
-  border: 1px solid rgba(0, 0, 0, .06);
-  transition: border-color 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-  position: relative;
-  overflow: visible;
+    background: white;
+    border-radius: 2px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    min-width: 220px;
+    border: 1px solid rgba(0, 0, 0, .06);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: visible;
 }
 
 .node-wrapper.selected {
-  border-color: var(--primary-color);
-  box-shadow: 0 4px 16px var(--primary-color-a03);
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 16px var(--primary-color-a03);
 }
 
 .node-header {
-  padding: 12px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid #f0f0f0;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .icon-container {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 16px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 16px;
 }
 
 .title {
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
 }
 
 .node-content {
-  padding: 12px 0;
-  display: flex;
-  justify-content: space-between;
-  min-height: 40px;
+    padding: 12px 0;
+    display: flex;
+    justify-content: space-between;
+    min-height: 40px;
 }
 
 .sockets {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .input-sockets {
-  align-items: flex-start;
+    align-items: flex-start;
 }
 
 .output-sockets {
-  align-items: flex-end;
+    align-items: flex-end;
 }
 
 .socket-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .socket-point {
-    margin-right: -8px;
     width: 16px;
     height: 16px;
     padding: 2px;
 }
 
+.input-sockets .socket-point {
+    margin-left: -8px;
+}
+.output-sockets .socket-point {
+    margin-right: -8px;
+}
+
 .socket-label {
-  font-size: 12px;
-  color: #666;
-  padding: 0 8px;
+    font-size: 12px;
+    color: #666;
+    padding: 0 8px;
 }
 
 .node-footer {
-  padding: 8px 16px;
-  background: #fafafa;
-  border-top: 1px solid #f0f0f0;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-  font-size: 11px;
+    padding: 8px 16px;
+    background: #fafafa;
+    border-top: 1px solid #f0f0f0;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    font-size: 11px;
 }
 
 .config-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .config-key {
-  color: #888;
-  margin-right: 8px;
+    color: #888;
+    margin-right: 8px;
 }
 
 .config-value {
-  color: #333;
-  font-weight: 500;
+    color: #333;
+    font-weight: 500;
 }

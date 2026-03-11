@@ -194,13 +194,14 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
     connection.addPreset(ConnectionPresets.classic.setup());
 
+    // setup arrange
     this.arrange = new AutoArrangePlugin<any>();
     this.arrange.addPreset(ArrangePresets.classic.setup());
 
     this.editor.use(this.area);
     this.area.use(connection);
     this.area.use(render);
-    this.area.use(this.arrange as any);
+    this.area.use(this.arrange);
 
     this.area.addPipe(context => {
         if (context.type === 'zoomed') {
@@ -492,10 +493,12 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
     nodes.forEach(node => {
       const config = currentConfigs[node.id];
+      const position = this.area.nodeViews.get(node.id)?.position || { x: 0, y: 0 };
       dagJson.nodes[node.id] = {
         type: node.label,
         name: config?.name || node.label,
-        config: config?.config || {}
+        config: config?.config || {},
+        position: position
       };
     });
 
@@ -583,8 +586,13 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
     let x = 0;
     for (const node of Array.from(nodeMap.values())) {
-      await this.area.translate(node.id, { x: x, y: 0 });
-      x += 250;
+      const nodeData = dagJson.nodes[node.id];
+      if (nodeData && nodeData.position) {
+        await this.area.translate(node.id, nodeData.position);
+      } else {
+        await this.area.translate(node.id, { x: x, y: 0 });
+        x += 260;
+      }
     }
 
     setTimeout(() => {
