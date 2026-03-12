@@ -72,7 +72,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         { type: 'FinishNode', label: 'Finish / Output' },
         { type: 'ReadInputNode', label: 'Read Input Metadata' },
         { type: 'ConvertNode', label: 'Convert Format' },
-        { type: 'CalculateCompressionNode', label: 'Calculate Compression' },
+        { type: 'CodeEvalNode', label: 'Code Eval (Python)' },
         { type: 'ConditionNode', label: 'Condition Branch' },
         { type: 'FileOperationNode', label: 'File Operation (Move/Clean)' },
         { type: 'MetadataWriteNode', label: 'Write Metadata' },
@@ -430,6 +430,31 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         }
     }
 
+    addCondition(nodeId: string) {
+        const config = this.nodeConfigs()[nodeId].config;
+        if (!config.conditions) {
+            config.conditions = [];
+        }
+        config.conditions.push({ variable: 'compression_ratio', operator: '<', threshold: 0.8 });
+        this.updateNodeConfig(nodeId, 'conditions', config.conditions);
+    }
+
+    removeCondition(nodeId: string, index: number) {
+        const config = this.nodeConfigs()[nodeId].config;
+        if (config.conditions) {
+            config.conditions.splice(index, 1);
+            this.updateNodeConfig(nodeId, 'conditions', config.conditions);
+        }
+    }
+
+    updateCondition(nodeId: string, index: number, field: string, value: any) {
+        const config = this.nodeConfigs()[nodeId].config;
+        if (config.conditions && config.conditions[index]) {
+            config.conditions[index][field] = value;
+            this.updateNodeConfig(nodeId, 'conditions', config.conditions);
+        }
+    }
+
     updateArgs(jsonString: string, nodeId: string) {
         try {
             const args = JSON.parse(jsonString);
@@ -437,6 +462,17 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         } catch (e) {
             // Ignore invalid JSON during typing
         }
+    }
+
+    selectedVarForInsert = signal<string>('args["file"]["size"]');
+
+    insertVariableToCode() {
+        const nodeId = this.selectedNode()?.id;
+        if (!nodeId) return;
+
+        const currentCode = this.nodeConfigs()[nodeId].config.code || '';
+        const newCode = currentCode + (currentCode.endsWith('\n') || currentCode === '' ? '' : ' ') + this.selectedVarForInsert();
+        this.updateNodeConfig(nodeId, 'code', newCode);
     }
 
     updateTags(jsonString: string, nodeId: string) {

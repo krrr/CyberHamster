@@ -120,46 +120,120 @@
           </nz-form-item>
         </ng-container>
 
+        <!-- CodeEvalNode Config -->
+        <ng-container *ngIf="selectedNode().label === 'CodeEvalNode'">
+          <nz-form-item>
+            <nz-form-label>Python Code</nz-form-label>
+            <nz-form-control>
+              <textarea
+                nz-input
+                [ngModel]="nodeConfigs()[selectedNode().id].config.code"
+                (ngModelChange)="updateNodeConfig(selectedNode().id, 'code', $event)"
+                name="code"
+                rows="6"
+                placeholder="import os&#10;args['file']['size'] / os.path.getsize(args['original_file_path'])"
+              ></textarea>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label>Quick Insert Variable</nz-form-label>
+            <nz-form-control>
+              <nz-input-group nzSearch [nzAddOnAfter]="suffixButton">
+                <nz-select [ngModel]="selectedVarForInsert()" (ngModelChange)="selectedVarForInsert.set($event)" name="quick_var">
+                  <nz-option nzValue="args['file']['path']" nzLabel="Current File Path"></nz-option>
+                  <nz-option nzValue="args['file']['size']" nzLabel="Current File Size"></nz-option>
+                  <nz-option nzValue="args['original_file_path']" nzLabel="Original File Path"></nz-option>
+                  <nz-option nzValue="args['compression_ratio']" nzLabel="Compression Ratio"></nz-option>
+                </nz-select>
+              </nz-input-group>
+              <ng-template #suffixButton>
+                <button nz-button nzType="primary" nzSearch (click)="insertVariableToCode()">Insert</button>
+              </ng-template>
+            </nz-form-control>
+          </nz-form-item>
+          <nz-form-item>
+            <nz-form-label>Output Variable Name</nz-form-label>
+            <nz-form-control>
+              <input
+                nz-input
+                [ngModel]="nodeConfigs()[selectedNode().id].config.output_var || 'eval_result'"
+                (ngModelChange)="updateNodeConfig(selectedNode().id, 'output_var', $event)"
+                name="output_var"
+                placeholder="eval_result"
+              />
+            </nz-form-control>
+          </nz-form-item>
+        </ng-container>
+
         <!-- ConditionNode Config -->
         <ng-container *ngIf="selectedNode().label === 'ConditionNode'">
           <nz-form-item>
-            <nz-form-label>Variable</nz-form-label>
-            <nz-form-control>
-              <input
-                nz-input
-                [ngModel]="nodeConfigs()[selectedNode().id].config.variable"
-                (ngModelChange)="updateNodeConfig(selectedNode().id, 'variable', $event)"
-                name="variable"
-                placeholder="compression_ratio"
-              />
-            </nz-form-control>
-          </nz-form-item>
-          <nz-form-item>
-            <nz-form-label>Operator</nz-form-label>
+            <nz-form-label>Relation</nz-form-label>
             <nz-form-control>
               <nz-select
-                [ngModel]="nodeConfigs()[selectedNode().id].config.operator"
-                (ngModelChange)="updateNodeConfig(selectedNode().id, 'operator', $event)"
-                name="operator"
+                [ngModel]="nodeConfigs()[selectedNode().id].config.relation || 'and'"
+                (ngModelChange)="updateNodeConfig(selectedNode().id, 'relation', $event)"
+                name="relation"
               >
-                <nz-option nzValue="<" nzLabel="<"></nz-option>
-                <nz-option nzValue=">" nzLabel=">"></nz-option>
-                <nz-option nzValue="==" nzLabel="=="></nz-option>
+                <nz-option nzValue="and" nzLabel="AND (All must match)"></nz-option>
+                <nz-option nzValue="or" nzLabel="OR (Any can match)"></nz-option>
               </nz-select>
             </nz-form-control>
           </nz-form-item>
-          <nz-form-item>
-            <nz-form-label>Threshold (Number)</nz-form-label>
-            <nz-form-control>
-              <input
-                nz-input
-                type="number"
-                [ngModel]="nodeConfigs()[selectedNode().id].config.threshold"
-                (ngModelChange)="updateNodeConfig(selectedNode().id, 'threshold', $event)"
-                name="threshold"
-              />
-            </nz-form-control>
-          </nz-form-item>
+
+          <div *ngFor="let cond of nodeConfigs()[selectedNode().id].config.conditions; let i = index" style="border: 1px solid #d9d9d9; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <strong>Condition {{ i + 1 }}</strong>
+              <button nz-button nzType="text" nzDanger nzSize="small" (click)="removeCondition(selectedNode().id, i)"><span nz-icon nzType="delete"></span></button>
+            </div>
+            <nz-form-item style="margin-bottom: 8px;">
+              <nz-form-label>Variable</nz-form-label>
+              <nz-form-control>
+                <nz-select
+                  nzMode="tags"
+                  [nzMaxTagCount]="1"
+                  [ngModel]="[cond.variable]"
+                  (ngModelChange)="updateCondition(selectedNode().id, i, 'variable', $event[0] || '')"
+                  name="cond_var_{{i}}"
+                  nzPlaceHolder="Select or type variable"
+                >
+                  <nz-option nzValue="compression_ratio" nzLabel="compression_ratio"></nz-option>
+                  <nz-option nzValue="file.size" nzLabel="file.size"></nz-option>
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item style="margin-bottom: 8px;">
+              <nz-form-label>Operator</nz-form-label>
+              <nz-form-control>
+                <nz-select
+                  [ngModel]="cond.operator"
+                  (ngModelChange)="updateCondition(selectedNode().id, i, 'operator', $event)"
+                  name="cond_op_{{i}}"
+                >
+                  <nz-option nzValue="<" nzLabel="<"></nz-option>
+                  <nz-option nzValue=">" nzLabel=">"></nz-option>
+                  <nz-option nzValue="==" nzLabel="=="></nz-option>
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+            <nz-form-item style="margin-bottom: 0;">
+              <nz-form-label>Threshold (Number)</nz-form-label>
+              <nz-form-control>
+                <input
+                  nz-input
+                  type="number"
+                  [ngModel]="cond.threshold"
+                  (ngModelChange)="updateCondition(selectedNode().id, i, 'threshold', $event)"
+                  name="cond_thresh_{{i}}"
+                />
+              </nz-form-control>
+            </nz-form-item>
+          </div>
+
+          <button nz-button nzType="dashed" nzBlock (click)="addCondition(selectedNode().id)">
+            <span nz-icon nzType="plus"></span>
+            Add Condition
+          </button>
         </ng-container>
 
         <!-- FileOperationNode Config -->
