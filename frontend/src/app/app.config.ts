@@ -33,6 +33,7 @@ import {
     ArrowUpOutline,
     HomeOutline,
     ApartmentOutline,
+    CodeOutline,
 } from '@ant-design/icons-angular/icons';
 
 registerLocaleData(en);
@@ -61,6 +62,7 @@ const icons: IconDefinition[] = [
     ArrowUpOutline,
     HomeOutline,
     ApartmentOutline,
+    CodeOutline,
 ];
 
 export const appConfig: ApplicationConfig = {

@@ -140,10 +140,7 @@
             <nz-form-control>
               <nz-input-group nzSearch [nzAddOnAfter]="suffixButton">
                 <nz-select [ngModel]="selectedVarForInsert()" (ngModelChange)="selectedVarForInsert.set($event)" name="quick_var">
-                  <nz-option nzValue="args['file']['path']" nzLabel="Current File Path"></nz-option>
-                  <nz-option nzValue="args['file']['size']" nzLabel="Current File Size"></nz-option>
-                  <nz-option nzValue="args['original_file_path']" nzLabel="Original File Path"></nz-option>
-                  <nz-option nzValue="args['compression_ratio']" nzLabel="Compression Ratio"></nz-option>
+                  <nz-option *ngFor="let varName of getAvailableVariables(selectedNode().id)" [nzValue]="formatVarForCode(varName)" [nzLabel]="varName"></nz-option>
                 </nz-select>
               </nz-input-group>
               <ng-template #suffixButton>
@@ -175,8 +172,8 @@
                 (ngModelChange)="updateNodeConfig(selectedNode().id, 'relation', $event)"
                 name="relation"
               >
-                <nz-option nzValue="and" nzLabel="AND (All must match)"></nz-option>
-                <nz-option nzValue="or" nzLabel="OR (Any can match)"></nz-option>
+                <nz-option nzValue="and" nzLabel="AND"/>
+                <nz-option nzValue="or" nzLabel="OR"/>
               </nz-select>
             </nz-form-control>
           </nz-form-item>
@@ -189,16 +186,11 @@
             <nz-form-item style="margin-bottom: 8px;">
               <nz-form-label>Variable</nz-form-label>
               <nz-form-control>
-                <nz-select
-                  nzMode="tags"
-                  [nzMaxTagCount]="1"
-                  [ngModel]="[cond.variable]"
-                  (ngModelChange)="updateCondition(selectedNode().id, i, 'variable', $event[0] || '')"
+                <nz-select [ngModel]="cond.variable"
+                  (ngModelChange)="updateCondition(selectedNode().id, i, 'variable', $event)"
                   name="cond_var_{{i}}"
-                  nzPlaceHolder="Select or type variable"
                 >
-                  <nz-option nzValue="compression_ratio" nzLabel="compression_ratio"></nz-option>
-                  <nz-option nzValue="file.size" nzLabel="file.size"></nz-option>
+                  <nz-option *ngFor="let varName of getAvailableVariables(selectedNode().id)" [nzValue]="varName" [nzLabel]="varName"></nz-option>
                 </nz-select>
               </nz-form-control>
             </nz-form-item>

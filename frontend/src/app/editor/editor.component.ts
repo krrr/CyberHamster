@@ -447,6 +447,51 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         }
     }
 
+    getAvailableVariables(nodeId: string): string[] {
+        const variables = new Set<string>();
+        const visited = new Set<string>();
+        const queue = [nodeId];
+
+        // Traverse backwards
+        while (queue.length > 0) {
+            const currentId = queue.shift()!;
+            if (visited.has(currentId)) continue;
+            visited.add(currentId);
+
+            const connections = this.editor.getConnections().filter(c => c.target === currentId);
+            for (const conn of connections) {
+                const sourceNodeId = conn.source;
+                queue.push(sourceNodeId);
+
+                const sourceNode = this.editor.getNode(sourceNodeId);
+                if (sourceNode?.label === 'StartNode') {
+                    // Only add default variables if connected to StartNode
+                    variables.add('file.size');
+                    variables.add('file.path');
+                    variables.add('original_file_path');
+                } else if (sourceNode?.label === 'CodeEvalNode') {
+                    const sourceConfig = this.nodeConfigs()[sourceNodeId];
+                    variables.add(sourceConfig?.config?.output_var || 'eval_result');
+                } else {
+                    // Check source node config for output_var
+                    const sourceConfig = this.nodeConfigs()[sourceNodeId];
+                    if (sourceConfig?.config?.output_var) {
+                        variables.add(sourceConfig.config.output_var);
+                    }
+                }
+            }
+        }
+        return Array.from(variables);
+    }
+
+    formatVarForCode(varName: string): string {
+        if (varName.startsWith('file.')) {
+            const parts = varName.split('.');
+            return `args["${parts[0]}"]["${parts[1]}"]`;
+        }
+        return `args["${varName}"]`;
+    }
+
     updateCondition(nodeId: string, index: number, field: string, value: any) {
         const config = this.nodeConfigs()[nodeId].config;
         if (config.conditions && config.conditions[index]) {

@@ -143,16 +143,6 @@ class ConditionNode(DAGNode):
         conditions = self.config.get("conditions", [])
         relation = self.config.get("relation", "and")
         
-        # Backward compatibility for old format
-        if not conditions:
-            var_name = self.config.get("variable")
-            if var_name:
-                conditions = [{
-                    "variable": var_name,
-                    "operator": self.config.get("operator"),
-                    "threshold": self.config.get("threshold")
-                }]
-
         if not conditions:
             logger.warning(f"[{self.name}] No conditions found, defaulting to False")
             return True, "false_branch", dict(inputs)

@@ -1,6 +1,7 @@
 import { Component, Input, HostBinding, ChangeDetectorRef, OnChanges } from '@angular/core';
 
 @Component({
+    selector: 'custom-socket',
     template: ``,
     styles: [
         `
