@@ -166,4 +166,9 @@ export class FoldersComponent implements OnInit {
         const task = this.tasks().find((t) => t.id === taskId);
         return task ? task.name : 'Unknown Task';
     }
+
+    getTaskIcon(taskId: number): string {
+        const task = this.tasks().find((t) => t.id === taskId);
+        return task ? task.icon || '🐹' : '❓';
+    }
 }

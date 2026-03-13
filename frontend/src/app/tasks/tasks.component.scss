@@ -1,10 +1,37 @@
 .tasks-container {
-    padding: 20px;
+    padding: 24px;
 }
+
+.task-icon {
+    font-size: 32px;
+    width: 48px;
+    height: 48px;
+    background-color: #f0f2f5;
+    border-radius: 2px;
+    line-height: 46px;  // without this icon shows
+    text-align: center;
+}
+
+.emoji-trigger {
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    line-height: 30px;
+    text-align: center;
+    border: 1px solid #d9d9d9;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: border-color 0.3s;
+
+    &:hover {
+        border-color: var(--primary-color);
+    }
+}
+
 
 .task-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(330px,1fr));
+    grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
     gap: 16px;
     flex-wrap: wrap;
 }
@@ -12,9 +39,11 @@
 .task-card {
     transition: all 0.3s;
     cursor: pointer;
+
     ::ng-deep .ant-card-body {
         padding: 16px;
     }
+
     .card-header {
         display: flex;
         justify-content: space-between;

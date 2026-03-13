@@ -12,6 +12,8 @@ import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzDropdownModule } from 'ng-zorro-antd/dropdown';
 import { COMMON_IMPORTS } from '../shared-imports';
 import { NzTagComponent } from 'ng-zorro-antd/tag';
+import { EmojiPickerComponent } from '../components/emoji-picker/emoji-picker.component';
+import { NzPopoverModule } from 'ng-zorro-antd/popover';
 
 @Component({
     selector: 'app-tasks',
@@ -27,6 +29,8 @@ import { NzTagComponent } from 'ng-zorro-antd/tag';
         NzDropdownModule,
         ...COMMON_IMPORTS,
         NzTagComponent,
+        EmojiPickerComponent,
+        NzPopoverModule,
     ],
     templateUrl: './tasks.component.html',
     styleUrls: ['./tasks.component.scss'],
@@ -39,10 +43,7 @@ export class TasksComponent implements OnInit {
     isEditing = signal(false);
     editingTaskId = signal<number | null>(null);
 
-    taskForm = signal({
-        name: '',
-        description: '',
-    });
+    taskForm = signal<any>({});
 
     constructor(
         private apiService: ApiService,
@@ -78,11 +79,12 @@ export class TasksComponent implements OnInit {
             this.taskForm.set({
                 name: task.name,
                 description: task.description || '',
+                icon: task.icon || '📁',
             });
         } else {
             this.isEditing.set(false);
             this.editingTaskId.set(null);
-            this.taskForm.set({ name: '', description: '' });
+            this.taskForm.set({ name: '', description: '', icon: '📁' });
         }
         this.isModalVisible.set(true);
     }
@@ -108,6 +110,7 @@ export class TasksComponent implements OnInit {
             const taskPayload = {
                 name: currentForm.name,
                 description: currentForm.description,
+                icon: currentForm.icon,
                 json_data: { nodes: {}, edges: [], start_node: null },
             };
 

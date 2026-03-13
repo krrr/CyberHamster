@@ -18,7 +18,10 @@
       <tr *ngFor="let folder of basicTable.data">
         <td>{{ folder.name }}</td>
         <td>{{ folder.watch_folder }}</td>
-        <td>{{ getTaskName(folder.task_id) }}</td>
+        <td>
+          <span style="font-size: 1.2em; margin-right: 4px;">{{ getTaskIcon(folder.task_id) }}</span>
+          {{ getTaskName(folder.task_id) }}
+        </td>
         <td>
           <nz-tag [nzColor]="folder.status === 'active' ? 'green' : 'red'">
             {{ folder.status | uppercase }}
@@ -90,7 +93,7 @@
                   name="task_id"
                   nzPlaceHolder="Select a task"
                 >
-                  <nz-option *ngFor="let t of tasks()" [nzValue]="t.id" [nzLabel]="t.name"></nz-option>
+                  <nz-option *ngFor="let t of tasks()" [nzValue]="t.id" [nzLabel]="(t.icon || '🐹') + ' ' + t.name"></nz-option>
                 </nz-select>
               </nz-form-control>
             </nz-form-item>
