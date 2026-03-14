@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { NodeEditor } from 'rete';
 import { AreaPlugin } from 'rete-area-plugin';
 
+
 @Injectable({
     providedIn: 'root'
 })
@@ -69,3 +70,16 @@ export class EditorService {
         return Array.from(variables);
     }
 }
+
+
+export const NODE_INFO: Record<string, { icon: string; color: string, label: string }> = {
+    StartNode: { icon: 'home', color: '#1890ff', label: 'Start' },
+    FinishNode: { icon: 'check-circle', color: '#52c41a', label: 'Finish / Output' },
+    MetadataReadNode: { icon: 'folder-open', color: '#c655df', label: 'Read Media Metadata' },
+    ConvertNode: { icon: 'sync', color: '#f04951', label: 'Convert Format' },
+    CodeEvalNode: { icon: 'code', color: '#945de1', label: 'Code Eval' },
+    ConditionNode: { icon: 'branches', color: '#faad14', label: 'Condition Branch' },
+    FileOperationNode: { icon: 'file-text', color: '#e1449b', label: 'File Operation (Move/Clean)' },
+    MetadataWriteNode: { icon: 'edit', color: '#13c2c2', label: 'Write Media Metadata' },
+    FFmpegActionNode: { icon: 'video-camera', color: '#c2dd2f', label: 'FFmpeg Action' },
+};

@@ -3,18 +3,8 @@ import { ClassicPreset } from 'rete';
 import { CommonModule } from '@angular/common';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { ReteModule } from 'rete-angular-plugin/18';
+import { NODE_INFO } from '../editor.service';
 
-export const NODE_INFO: Record<string, { icon: string; color: string }> = {
-    StartNode: { icon: 'home', color: '#1890ff' },
-    FinishNode: { icon: 'check-circle', color: '#52c41a' },
-    MetadataReadNode: { icon: 'folder-open', color: '#c655df' },
-    ConvertNode: { icon: 'sync', color: '#f04951' },
-    CodeEvalNode: { icon: 'code', color: '#945de1' },
-    ConditionNode: { icon: 'branches', color: '#faad14' },
-    FileOperationNode: { icon: 'file-text', color: '#e1449b' },
-    MetadataWriteNode: { icon: 'edit', color: '#13c2c2' },
-    FFmpegActionNode: { icon: 'video-camera', color: '#c2dd2f' },
-};
 
 @Component({
     selector: 'app-custom-node',

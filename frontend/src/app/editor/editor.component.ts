@@ -7,7 +7,7 @@ import { AreaPlugin, AreaExtensions } from 'rete-area-plugin';
 import { ConnectionPlugin, Presets as ConnectionPresets } from 'rete-connection-plugin';
 import { AutoArrangePlugin, Presets as ArrangePresets } from 'rete-auto-arrange-plugin';
 import { AngularPlugin, Presets, AngularArea2D } from 'rete-angular-plugin/18';
-import { CustomNodeComponent, NODE_INFO } from './custom-node/custom-node.component';
+import { CustomNodeComponent } from './custom-node/custom-node.component';
 import { ApiService } from '../api.service';
 import { Subscription } from 'rxjs';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -29,7 +29,7 @@ import { PropsConditionComponent } from './properties/props-condition.component'
 import { PropsFileOperationComponent } from './properties/props-file-operation.component';
 import { PropsMetadataWriteComponent } from './properties/props-metadata-write.component';
 import { PropsFFmpegActionComponent } from './properties/props-ffmpeg-action.component';
-import { EditorService } from './editor.service';
+import { EditorService, NODE_INFO } from './editor.service';
 
 type Schemes = GetSchemes<ClassicPreset.Node, ClassicPreset.Connection<ClassicPreset.Node, ClassicPreset.Node>>;
 type AreaExtra = AngularArea2D<Schemes>;
@@ -82,17 +82,9 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     isLogsModalVisible = signal(false);
     executeFilePath = signal('');
 
-    availableNodes = [
-        // { type: 'StartNode', label: 'Start (Input File)' },
-        { type: 'FinishNode', label: 'Finish / Output' },
-        { type: 'MetadataReadNode', label: 'Read Media Metadata' },
-        { type: 'ConvertNode', label: 'Convert Format' },
-        { type: 'CodeEvalNode', label: 'Code Eval (Python)' },
-        { type: 'ConditionNode', label: 'Condition Branch' },
-        { type: 'FileOperationNode', label: 'File Operation (Move/Clean)' },
-        { type: 'MetadataWriteNode', label: 'Write Media Metadata' },
-        { type: 'FFmpegActionNode', label: 'FFmpeg Action' },
-    ];
+    availableNodes = ['FinishNode', 'MetadataReadNode', 'ConvertNode', 'CodeEvalNode', 'ConditionNode', 'FileOperationNode',
+        'MetadataWriteNode', 'FFmpegActionNode'];
+    NODE_INFO = NODE_INFO;
 
     getNodeIcon(type: string | undefined): string {
         if (!type) return 'question-circle';
