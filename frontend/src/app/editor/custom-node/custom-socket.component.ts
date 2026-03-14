@@ -9,10 +9,10 @@ import { Component, Input, HostBinding, ChangeDetectorRef, OnChanges } from '@an
                 display: block;
                 width: 12px;
                 height: 12px;
-                background: var(--primary-color);
+                background: var(--primary-color-tint);
                 border-radius: 50%;
                 border: 2px solid white;
-                box-shadow: 0 0 0 1px var(--primary-color);
+                box-shadow: 0 0 0 1px var(--primary-color-tint);
             }
         `,
     ],

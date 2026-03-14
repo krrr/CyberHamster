@@ -5,15 +5,15 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { ReteModule } from 'rete-angular-plugin/18';
 
 export const NODE_INFO: Record<string, { icon: string; color: string }> = {
-    StartNode: { icon: 'home', color: '#52c41a' },
-    FinishNode: { icon: 'check-circle', color: '#1890ff' },
-    MetadataReadNode: { icon: 'folder-open', color: '#1890ff' },
-    ConvertNode: { icon: 'sync', color: '#52c41a' },
-    CodeEvalNode: { icon: 'code', color: '#722ed1' },
+    StartNode: { icon: 'home', color: '#1890ff' },
+    FinishNode: { icon: 'check-circle', color: '#52c41a' },
+    MetadataReadNode: { icon: 'folder-open', color: '#c655df' },
+    ConvertNode: { icon: 'sync', color: '#f04951' },
+    CodeEvalNode: { icon: 'code', color: '#945de1' },
     ConditionNode: { icon: 'branches', color: '#faad14' },
-    FileOperationNode: { icon: 'file-text', color: '#eb2f96' },
+    FileOperationNode: { icon: 'file-text', color: '#e1449b' },
     MetadataWriteNode: { icon: 'edit', color: '#13c2c2' },
-    FFmpegActionNode: { icon: 'video-camera', color: '#f5222d' },
+    FFmpegActionNode: { icon: 'video-camera', color: '#c2dd2f' },
 };
 
 @Component({
@@ -36,6 +36,15 @@ export class CustomNodeComponent implements OnChanges {
 
     get iconColor(): string {
         return NODE_INFO[this.data.label]?.color || '#666';
+    }
+
+    get headerBgColor(): string {
+        const iconColor = this.iconColor;
+        if (iconColor.startsWith('#')) {
+            return iconColor + '10'; // ~6% opacity
+        } else {
+            return 'rgba(0,0,0,0.05)';
+        }
     }
 
     get inputs() {

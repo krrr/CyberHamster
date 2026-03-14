@@ -18,7 +18,7 @@ import { ClassicPreset } from 'rete';
             path {
                 fill: none;
                 stroke-width: 2px;
-                stroke: var(--primary-color);
+                stroke: var(--primary-color-tint);
                 pointer-events: auto;
             }
         `,
