@@ -58,13 +58,29 @@ class TaskExecutor:
             self.reverse_edges[target].append((source, branch))
 
     def _build_inputs_for_node(self, node_id: str, context: FileContext) -> Dict[str, Any]:
-        """Collect and merge outputs from all upstream nodes."""
+        """Collect and merge outputs from all ancestor nodes."""
         inputs = {}
-        if node_id in self.reverse_edges:
-            for source_id, branch in self.reverse_edges[node_id]:
-                source_output = context.get_node_output(source_id)
-                # Merge outputs, later edges might overwrite earlier ones if keys clash
-                inputs.update(source_output)
+        
+        visited = set()
+        ordered_ancestors = []
+
+        def dfs(current_id):
+            if current_id in visited:
+                return
+            visited.add(current_id)
+            if current_id in self.reverse_edges:
+                for parent_id, _ in self.reverse_edges[current_id]:
+                    dfs(parent_id)
+            if current_id != node_id:
+                ordered_ancestors.append(current_id)
+
+        dfs(node_id)
+
+        for ancestor_id in ordered_ancestors:
+            ancestor_output = context.get_node_output(ancestor_id)
+            if ancestor_output:
+                inputs.update(ancestor_output)
+                
         return inputs
 
     def execute(self, file_path: str) -> bool:
@@ -87,7 +103,7 @@ class TaskExecutor:
             initial_file_obj = {
                 "path": file_path,
                 "size": os.path.getsize(file_path) if os.path.exists(file_path) else 0,
-                "metadata": {}
+                "metadata": None
             }
         except Exception as e:
             logger.error(f"Failed to get info for {file_path}: {e}")
