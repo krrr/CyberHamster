@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, Input, OnChanges, signal } from '@angular/core';
 import { inject } from '@angular/core';
 import { EditorService } from '../editor.service';
 import { CommonModule } from '@angular/common';
@@ -37,12 +37,12 @@ import { NzInputModule } from 'ng-zorro-antd/input';
         </nz-form-item>
     `
 })
-export class PropsFFmpegActionComponent implements OnInit {
+export class PropsFFmpegActionComponent implements OnChanges {
     config = signal<any>({});
     @Input() nodeId!: string;
     editorService = inject(EditorService);
 
-    ngOnInit(): void {
+    ngOnChanges(): void {
         this.config.set(this.editorService.getNodeConfig(this.nodeId));
     }
 

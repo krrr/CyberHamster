@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, Input, OnChanges, signal } from '@angular/core';
 import { inject } from '@angular/core';
 import { EditorService } from '../editor.service';
 import { CommonModule } from '@angular/common';
@@ -78,12 +78,12 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
         </button>
     `
 })
-export class PropsConditionComponent implements OnInit {
+export class PropsConditionComponent implements OnChanges {
     config = signal<any>({});
     @Input() nodeId!: string;
     editorService = inject(EditorService);
 
-    ngOnInit(): void {
+    ngOnChanges(): void {
         this.config.set(this.editorService.getNodeConfig(this.nodeId));
     }
 

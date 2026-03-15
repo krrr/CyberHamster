@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, signal } from '@angular/core';
+import { Component, Input, OnChanges, signal } from '@angular/core';
 import { inject } from '@angular/core';
 import { EditorService } from '../editor.service';
 import { CommonModule } from '@angular/common';
@@ -31,7 +31,7 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
           <nz-form-control>
             <nz-input-group nzSearch [nzAddOnAfter]="suffixButton">
               <nz-select [(ngModel)]="selectedVarForInsert" name="quick_var" nzSize="small">
-                <nz-option *ngFor="let varName of availableVariables" [nzValue]="formatVarForCode(varName)" [nzLabel]="varName"></nz-option>
+                <nz-option *ngFor="let i of availableVariables" [nzValue]="formatVarForCode(i)" [nzLabel]="i"/>
               </nz-select>
             </nz-input-group>
             <ng-template #suffixButton>
@@ -53,12 +53,12 @@ import { NzButtonModule } from 'ng-zorro-antd/button';
         </nz-form-item>
     `
 })
-export class PropsCodeEvalComponent implements OnInit {
+export class PropsCodeEvalComponent implements OnChanges {
     config = signal<any>({});
     @Input() nodeId!: string;
     editorService = inject(EditorService);
 
-    ngOnInit(): void {
+    ngOnChanges(): void {
         this.config.set(this.editorService.getNodeConfig(this.nodeId));
     }
 
