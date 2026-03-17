@@ -1,0 +1,105 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { ActivatedRoute } from '@angular/router';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { of } from 'rxjs';
+import { NzMessageService } from 'ng-zorro-antd/message';
+import { ApiService } from '../api.service';
+import { EditorService } from './editor.service';
+import { vi } from 'vitest';
+
+import { EditorComponent } from './editor.component';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+
+// We override the component's template and some properties so we don't have to deal with DOM and Rete.js initialization
+// which heavily relies on `HTMLElement` and actual browser rendering that can be brittle in jsdom.
+
+describe('EditorComponent', () => {
+    let component: EditorComponent;
+    let fixture: ComponentFixture<EditorComponent>;
+    let apiServiceSpy: any;
+    let messageServiceSpy: any;
+
+    beforeEach(async () => {
+        apiServiceSpy = {
+            getTask: vi.fn().mockReturnValue(of({ name: 'Task', description: 'Desc' })),
+            updateTask: vi.fn().mockReturnValue(of({})),
+            executeTask: vi.fn().mockReturnValue(of({})),
+        };
+        messageServiceSpy = {
+            success: vi.fn(),
+            error: vi.fn(),
+            warning: vi.fn(),
+        };
+
+        await TestBed.configureTestingModule({
+            imports: [EditorComponent, NoopAnimationsModule],
+            providers: [
+                provideHttpClient(),
+                provideHttpClientTesting(),
+                { provide: ApiService, useValue: apiServiceSpy },
+                { provide: NzMessageService, useValue: messageServiceSpy },
+                {
+                    provide: ActivatedRoute,
+                    useValue: { paramMap: of(new Map([['id', '1']])) }
+                },
+                EditorService
+            ],
+        })
+        .overrideComponent(EditorComponent, {
+            set: {
+                template: '<div>Mock Template</div>' // Override template to prevent actual rendering
+            }
+        })
+        .compileComponents();
+
+        fixture = TestBed.createComponent(EditorComponent);
+        component = fixture.componentInstance;
+
+        // Mock the internal signals and properties so we don't trigger rete logic
+        component.taskId = vi.fn().mockReturnValue(1) as any;
+        component.executeFilePath = vi.fn().mockReturnValue('/test/path') as any;
+
+        // Mock serializeDag because it needs Rete editor
+        component.serializeDag = vi.fn().mockReturnValue({ nodes: {}, edges: [], start_node: null }) as any;
+
+        // Prevent ngAfterViewInit from running which requires Rete
+        component.ngAfterViewInit = async () => {};
+    });
+
+    it('should create', () => {
+        expect(component).toBeTruthy();
+    });
+
+    it('should save DAG', () => {
+        component.saveDag();
+        expect(apiServiceSpy.getTask).toHaveBeenCalledWith(1);
+        expect(apiServiceSpy.updateTask).toHaveBeenCalledWith(1, {
+            name: 'Task',
+            description: 'Desc',
+            json_data: { nodes: {}, edges: [], start_node: null }
+        });
+        expect(messageServiceSpy.success).toHaveBeenCalledWith('Task Saved successfully');
+    });
+
+    it('should execute DAG', () => {
+        const setLogsSpy = vi.spyOn(component.logs, 'set');
+        const setLogsModalSpy = vi.spyOn(component.isLogsModalVisible, 'set');
+
+        component.executeDag();
+
+        expect(setLogsSpy).toHaveBeenCalledWith([]);
+        expect(setLogsModalSpy).toHaveBeenCalledWith(true);
+        expect(apiServiceSpy.executeTask).toHaveBeenCalledWith({ nodes: {}, edges: [], start_node: null }, '/test/path', 1);
+    });
+
+    it('should handle execution error', async () => {
+        const { Observable } = await import('rxjs');
+        apiServiceSpy.executeTask.mockReturnValue(new Observable((sub: any) => sub.error('Error')));
+
+        component.executeDag();
+
+        expect(messageServiceSpy.error).toHaveBeenCalledWith('Execution failed');
+    });
+});
