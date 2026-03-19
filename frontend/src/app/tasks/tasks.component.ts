@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../api.service';
 import { Router } from '@angular/router';
 import { NzCardModule } from 'ng-zorro-antd/card';
-import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -49,6 +49,7 @@ export class TasksComponent implements OnInit {
         private apiService: ApiService,
         private router: Router,
         private message: NzMessageService,
+        private modal: NzModalService,
     ) {}
 
     ngOnInit() {
@@ -123,18 +124,28 @@ export class TasksComponent implements OnInit {
     }
 
     deleteTask(id: number) {
-        this.apiService.deleteTask(id).subscribe({
-            next: () => {
-                this.message.success('Task deleted');
-                this.loadTasks();
+        this.modal.confirm({
+            nzTitle: 'Are you sure you want to delete this task?',
+            nzContent: 'This action cannot be undone.',
+            nzOkText: 'Delete',
+            nzOkType: 'primary',
+            nzOkDanger: true,
+            nzOnOk: () => {
+                this.apiService.deleteTask(id).subscribe({
+                    next: () => {
+                        this.message.success('Task deleted');
+                        this.loadTasks();
+                    },
+                    error: (err) => {
+                        if (err.status === 400) {
+                            this.message.error(err.error.detail || 'Cannot delete task used by folders');
+                        } else {
+                            this.message.error('Failed to delete task');
+                        }
+                    },
+                });
             },
-            error: (err) => {
-                if (err.status === 400) {
-                    this.message.error(err.error.detail || 'Cannot delete task used by folders');
-                } else {
-                    this.message.error('Failed to delete task');
-                }
-            },
+            nzCancelText: 'Cancel',
         });
     }
 
