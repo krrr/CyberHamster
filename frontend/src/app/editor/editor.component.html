@@ -50,7 +50,7 @@
         </div>
 
         <h4>Configuration</h4>
-        <div [ngSwitch]="selectedNode().type" class="ant-form ant-form-vertical">
+        <div [ngSwitch]="selectedNode().type" class="ant-form">
           <app-read-input-props *ngSwitchCase="'MetadataReadNode'" [nodeId]="selectedNode().id"/>
           <app-convert-props *ngSwitchCase="'ConvertNode'" [nodeId]="selectedNode().id"/>
           <app-code-eval-props *ngSwitchCase="'CodeEvalNode'" [nodeId]="selectedNode().id"/>

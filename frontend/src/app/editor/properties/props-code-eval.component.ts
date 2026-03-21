@@ -14,7 +14,7 @@ import { PropsBase } from './props-base';
     imports: [CommonModule, FormsModule, NzFormModule, NzInputModule, NzSelectModule, NzButtonModule, NzCodeEditorModule],
     template: `
         <nz-form-item>
-          <nz-form-label>Python Code</nz-form-label>
+          <nz-form-label style="width: 100%; text-align: left">Python Code</nz-form-label>
           <nz-form-control>
             <nz-code-editor
               class="editor"

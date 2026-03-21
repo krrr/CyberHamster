@@ -79,7 +79,7 @@ class MetadataReadNode(DAGNode):
         
         if enable_single_tag:
             read_single_tag = self.config.get("read_single_tag")
-            return True, "default", {"metadata": metadata[read_single_tag]}
+            return True, "default", {"metadata": metadata.get(read_single_tag)}
         else:
             return True, "default", {"metadata": metadata}
 
@@ -97,7 +97,9 @@ class ConvertNode(DAGNode):
             return False, None, {}
 
         target_ext = self.config.get("target_extension", ".avif")
-        
+        if not target_ext.startswith('.'):
+            target_ext = '.' + target_ext
+
         # Create a temp file
         try:
             temp_fd, temp_path = tempfile.mkstemp(suffix=target_ext)

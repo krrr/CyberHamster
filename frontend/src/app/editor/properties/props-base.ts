@@ -14,6 +14,9 @@ export abstract class PropsBase {
 
     updateConfig(field: string, value: any) {
         this.editorService.updateNodeConfig(this.nodeId, field, value);
-        this.config.set(this.editorService.getNodeConfig(this.nodeId));
+        this.config.update((configs) => ({
+            ...configs,
+            [field]: value
+        }));
     }
 }

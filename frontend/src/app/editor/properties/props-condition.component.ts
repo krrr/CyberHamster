@@ -23,13 +23,13 @@ import { PropsBase } from './props-base';
               (ngModelChange)="updateConfig('relation', $event)"
               name="relation"
             >
-              <nz-option nzValue="and" nzLabel="AND"></nz-option>
-              <nz-option nzValue="or" nzLabel="OR"></nz-option>
+              <nz-option nzValue="and" nzLabel="AND"/>
+              <nz-option nzValue="or" nzLabel="OR"/>
             </nz-select>
           </nz-form-control>
         </nz-form-item>
 
-        <div *ngFor="let cond of config().conditions; let i = index" style="border: 1px solid #d9d9d9; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+        <div *ngFor="let cond of config().conditions; let i = index; trackBy: trackByIndex" style="border: 1px solid #d9d9d9; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <strong>Condition {{ i + 1 }}</strong>
             <button nz-button nzType="text" nzDanger nzSize="small" (click)="removeCondition(i)"><span nz-icon nzType="delete"></span></button>
@@ -53,9 +53,9 @@ import { PropsBase } from './props-base';
                 (ngModelChange)="updateCondition(i, 'operator', $event)"
                 name="cond_op_{{i}}"
               >
-                <nz-option nzValue="<" nzLabel="<"></nz-option>
-                <nz-option nzValue=">" nzLabel=">"></nz-option>
-                <nz-option nzValue="==" nzLabel="=="></nz-option>
+                <nz-option nzValue="<" nzLabel="<"/>
+                <nz-option nzValue=">" nzLabel=">"/>
+                <nz-option nzValue="==" nzLabel="=="/>
               </nz-select>
             </nz-form-control>
           </nz-form-item>
@@ -72,11 +72,15 @@ import { PropsBase } from './props-base';
           </nz-form-item>
         </div>
 
-        <button nz-button nzType="dashed" nzBlock (click)="addCondition()">
-          <span nz-icon nzType="plus"></span>
-          Add Condition
+        <button nz-button nzType="dashed" nzBlock (click)="addCondition()" class="add-btn">
+          <span nz-icon nzType="plus"></span> Add Condition
         </button>
-    `
+    `,
+    styles: [`
+      .add-btn {
+        margin-bottom: 12px;
+      }
+    `]
 })
 export class PropsConditionComponent extends PropsBase implements OnChanges {
     get availableVariables(): string[] {
@@ -103,5 +107,9 @@ export class PropsConditionComponent extends PropsBase implements OnChanges {
             conditions[index] = { ...conditions[index], [field]: value };
             this.updateConfig('conditions', conditions);
         }
+    }
+
+    trackByIndex(index: number, item: any): number {
+        return index;
     }
 }
