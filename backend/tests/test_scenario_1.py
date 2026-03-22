@@ -26,7 +26,9 @@ SCENARIO_1_DAG = {
         "node_4": {"type": "ConditionNode", "name": "Check Threshold", "config": {"relation": "and", "conditions": [{"variable": "node_3:compression_ratio", "operator": "<", "target": "0.8"}]}},
         "node_5": {"type": "FileOperationNode", "name": "Replace", "config": {"input_file_var": "node_2:file", "action": "overwrite", "target_file_var": "node_0:file", "target_extension": ".avif"}},
         "node_6": {"type": "FileOperationNode", "name": "Cleanup", "config": {"input_file_var": "node_2:file", "action": "cleanup"}},
-        "node_7": {"type": "MetadataWriteNode", "name": "Write Meta", "config": {"input_file_var": "node_0:file", "tags": {"XMP:ProcessingStatus": "LowCompression_Skipped"}, "write_to_original": True}}
+        "node_7": {"type": "MetadataWriteNode", "name": "Write Meta", "config": {"input_file_var": "node_0:file", "tags": {"XMP:ProcessingStatus": "LowCompression_Skipped"}}},
+        "node_8": {"type": "FinishNode", "name": "Finish1", "config": {}},
+        "node_9": {"type": "FinishNode", "name": "Finish2", "config": {}},
     },
     "edges": [
         {"source": "node_0", "target": "node_1", "branch": "default"},
@@ -35,7 +37,9 @@ SCENARIO_1_DAG = {
         {"source": "node_3", "target": "node_4", "branch": "default"},
         {"source": "node_4", "target": "node_5", "branch": "true_branch"},
         {"source": "node_4", "target": "node_6", "branch": "false_branch"},
-        {"source": "node_6", "target": "node_7", "branch": "default"}
+        {"source": "node_5", "target": "node_9", "branch": "default"},
+        {"source": "node_6", "target": "node_7", "branch": "default"},
+        {"source": "node_7", "target": "node_8", "branch": "default"},
     ]
 }
 

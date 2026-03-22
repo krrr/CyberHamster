@@ -25,19 +25,21 @@ SCENARIO_2_DAG = {
         }},
         "node_3": {"type": "FileOperationNode", "name": "Replace", "config": {
             "input_file_var": "node_2:file",
-            "action": "overwrite"
+            "action": "overwrite",
+            "target_file_var": "node_0:file",
         }},
         "node_4": {"type": "MetadataWriteNode", "name": "Write Meta", "config": {
-            "input_file_var": "node_3:file",
+            "input_file_var": "node_0:file",
             "tags": {"Processed": "True"},
-            "write_to_original": False
-        }}
+        }},
+        "node_5": {"type": "FinishNode", "name": "Finish", "config": {}}
     },
     "edges": [
         {"source": "node_0", "target": "node_1", "branch": "default"},
         {"source": "node_1", "target": "node_2", "branch": "default"},
         {"source": "node_2", "target": "node_3", "branch": "default"},
-        {"source": "node_3", "target": "node_4", "branch": "default"}
+        {"source": "node_3", "target": "node_4", "branch": "default"},
+        {"source": "node_4", "target": "node_5", "branch": "default"}
     ]
 }
 

@@ -49,6 +49,12 @@ class DAGNode:
         """
         raise NotImplementedError("Subclasses must implement execute()")
 
+    def get_config_value_required(self, key: str):
+        value = self.config.get(key)
+        if value is None:
+            raise Exception('config missing: ' + key)
+        return value
+
 class StartNode(DAGNode):
     """Start node. Passes the initial file to downstream."""
     def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
@@ -224,7 +230,7 @@ class FileOperationNode(DAGNode):
         
         if action == "overwrite":
             # Destination file (the one we are replacing)
-            target_var = self.config.get("target_file_var")
+            target_var = self.get_config_value_required("target_file_var")
             target_obj = inputs.get(target_var) if target_var else None
             
             if not target_obj or "path" not in target_obj:
