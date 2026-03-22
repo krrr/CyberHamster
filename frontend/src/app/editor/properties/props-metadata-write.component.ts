@@ -1,28 +1,28 @@
-import { Component, Input, OnChanges } from '@angular/core';
-import { inject } from '@angular/core';
-import { EditorService } from '../editor.service';
+import { Component, OnChanges } from '@angular/core';
+import { EditorService, VariableInfo } from '../editor.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 import { PropsBase } from './props-base';
 
 @Component({
     selector: 'app-metadata-write-props',
     standalone: true,
-    imports: [CommonModule, FormsModule, NzFormModule, NzInputModule, NzCheckboxModule],
+    imports: [CommonModule, FormsModule, NzFormModule, NzInputModule, NzSelectModule],
     template: `
         <nz-form-item>
-          <nz-form-label>Write To Original File</nz-form-label>
+          <nz-form-label>Target File Source</nz-form-label>
           <nz-form-control>
-            <label
-              nz-checkbox
-              [ngModel]="config().write_to_original"
-              (ngModelChange)="updateConfig('write_to_original', $event)"
-              name="write_to_original"
-              >Enable</label
+            <nz-select
+              [ngModel]="config().target_file_var"
+              (ngModelChange)="updateConfig('target_file_var', $event)"
+              nzPlaceHolder="Select target node"
+              name="target_file_var"
             >
+              <nz-option *ngFor="let i of availableVariables" [nzValue]="i.value" [nzLabel]="i.label"/>
+            </nz-select>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
@@ -41,6 +41,10 @@ import { PropsBase } from './props-base';
     `
 })
 export class PropsMetadataWriteComponent extends PropsBase implements OnChanges {
+    get availableVariables(): VariableInfo[] {
+        return this.editorService.getAvailableVariables(this.nodeId).filter(v => v.value.endsWith(':file'));
+    }
+
     updateTags(jsonString: string) {
         try {
             const tags = JSON.parse(jsonString);

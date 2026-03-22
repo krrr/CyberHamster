@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges, signal } from '@angular/core';
 import { inject } from '@angular/core';
-import { EditorService } from '../editor.service';
+import { EditorService, VariableInfo } from '../editor.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -13,6 +13,19 @@ import { PropsBase } from './props-base';
     standalone: true,
     imports: [CommonModule, FormsModule, NzFormModule, NzInputModule, NzSelectModule],
     template: `
+        <nz-form-item>
+          <nz-form-label>Input File Source</nz-form-label>
+          <nz-form-control>
+            <nz-select
+              [ngModel]="config().input_file_var"
+              (ngModelChange)="updateConfig('input_file_var', $event)"
+              nzPlaceHolder="Select source node"
+              name="input_file_var"
+            >
+              <nz-option *ngFor="let i of availableVariables" [nzValue]="i.value" [nzLabel]="i.label"></nz-option>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
         <nz-form-item>
           <nz-form-label>Tool</nz-form-label>
           <nz-form-control>
@@ -53,6 +66,10 @@ import { PropsBase } from './props-base';
     `
 })
 export class PropsConvertComponent extends PropsBase implements OnChanges {
+    get availableVariables(): VariableInfo[] {
+        return this.editorService.getAvailableVariables(this.nodeId).filter(v => v.value.endsWith(':file'));
+    }
+
     updateArgs(jsonString: string) {
         try {
             const args = JSON.parse(jsonString);

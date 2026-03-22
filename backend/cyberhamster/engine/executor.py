@@ -1,7 +1,7 @@
 import os
 from typing import Dict, Any, List
 from .context import FileContext
-from .nodes import NODE_TYPES, StartNode
+from .nodes import NODE_TYPES, StartNode, FinishNode
 from ..logger import logger
 
 class TaskExecutor:
@@ -58,7 +58,7 @@ class TaskExecutor:
             self.reverse_edges[target].append((source, branch))
 
     def _build_inputs_for_node(self, node_id: str, context: FileContext) -> Dict[str, Any]:
-        """Collect and merge outputs from all ancestor nodes."""
+        """Collect and merge outputs from all ancestor nodes using node_id:var_name format."""
         inputs = {}
         
         visited = set()
@@ -69,7 +69,8 @@ class TaskExecutor:
                 return
             visited.add(current_id)
             if current_id in self.reverse_edges:
-                for parent_id, _ in self.reverse_edges[current_id]:
+                # Sort parents to ensure deterministic order (though not strictly required for prefixed keys)
+                for parent_id, _ in sorted(self.reverse_edges[current_id]):
                     dfs(parent_id)
             if current_id != node_id:
                 ordered_ancestors.append(current_id)
@@ -79,7 +80,8 @@ class TaskExecutor:
         for ancestor_id in ordered_ancestors:
             ancestor_output = context.get_node_output(ancestor_id)
             if ancestor_output:
-                inputs.update(ancestor_output)
+                for var_name, var_value in ancestor_output.items():
+                    inputs[f"{ancestor_id}:{var_name}"] = var_value
                 
         return inputs
 
@@ -93,12 +95,12 @@ class TaskExecutor:
         logger.info(f"Starting DAG execution for file: {file_path}")
         context = FileContext(original_file_path=file_path)
         current_node_id = self.start_node_id
-        start_node = self.nodes.get(self.start_node_id)
-        assert start_node and isinstance(start_node, StartNode)
         
         if not current_node_id:
             logger.error("No start node defined in DAG.")
             return False
+        start_node = self.nodes.get(current_node_id)
+        assert start_node and isinstance(start_node, StartNode)
         
         # Prepare the initial file object for the start node
         try:
@@ -121,10 +123,9 @@ class TaskExecutor:
                 logger.info(f"--- Executing node: {current_node.name} (ID: {current_node_id}) ---")
                 
                 # Build inputs
+                node_inputs = self._build_inputs_for_node(current_node_id, context)
                 if current_node_id == self.start_node_id:
-                    node_inputs = {"file": initial_file_obj}
-                else:
-                    node_inputs = self._build_inputs_for_node(current_node_id, context)
+                    node_inputs["file"] = initial_file_obj
 
                 success, next_branch, output_data = current_node.execute(node_inputs, context)
                 
@@ -135,15 +136,16 @@ class TaskExecutor:
                     logger.warning(f"DAG execution halted at node: {current_node.name} (ID: {current_node_id})")
                     # Could handle specific failure logic or fallback branches here
                     return False
-                    
+
+                if isinstance(current_node, FinishNode):
+                    current_node_id = None
                 # Determine next node based on branch
-                if next_branch and current_node_id in self.edges and next_branch in self.edges[current_node_id]:
+                elif next_branch and current_node_id in self.edges and next_branch in self.edges[current_node_id]:
                     current_node_id = self.edges[current_node_id][next_branch]
                 else:
-                    # No outgoing edge for this branch, execution completes
-                    logger.info(f"No outgoing edge for branch '{next_branch}' from node {current_node_id}. Execution finished.")
-                    current_node_id = None
-                    
+                    # No outgoing edge for this branch, but not FinishNode
+                    raise Exception(f"No outgoing edge for branch '{next_branch}' from node {current_node_id}")
+
             logger.info(f"Successfully completed DAG execution for file: {file_path}")
             return True
         except Exception as e:

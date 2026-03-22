@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges, signal } from '@angular/core';
 import { inject } from '@angular/core';
-import { EditorService } from '../editor.service';
+import { EditorService, VariableInfo } from '../editor.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -41,7 +41,7 @@ import { PropsBase } from './props-base';
                 (ngModelChange)="updateCondition(i, 'variable', $event)"
                 name="cond_var_{{i}}"
               >
-                <nz-option *ngFor="let varName of availableVariables" [nzValue]="varName" [nzLabel]="varName"></nz-option>
+                <nz-option *ngFor="let i of availableVariables" [nzValue]="i.value" [nzLabel]="i.label"></nz-option>
               </nz-select>
             </nz-form-control>
           </nz-form-item>
@@ -83,7 +83,7 @@ import { PropsBase } from './props-base';
     `]
 })
 export class PropsConditionComponent extends PropsBase implements OnChanges {
-    get availableVariables(): string[] {
+    get availableVariables(): VariableInfo[] {
         return this.editorService.getAvailableVariables(this.nodeId);
     }
     

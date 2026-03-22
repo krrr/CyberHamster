@@ -33,48 +33,20 @@ class ExifToolWrapper:
         """
         try:
             with pyexiv2.Image(file_path) as img:
-                exif_tags = {}
-                iptc_tags = {}
                 xmp_tags = {}
 
-                for tag, value in tags.items():
-                    # Map tags to their respective group based on prefix
-                    lower_tag = tag.lower()
-                    if lower_tag.startswith('exif.'):
-                        exif_tags[tag] = value
-                    elif lower_tag.startswith('iptc.'):
-                        iptc_tags[tag] = value
-                    elif lower_tag.startswith('xmp.'):
-                        xmp_tags[tag] = value
-                    else:
-                        # Fallback for old ExifTool style or unspecified
-                        if ':' in tag:
-                            prefix, rest = tag.split(':', 1)
-                            prefix_lower = prefix.lower()
-                            # Standard ExifTool prefixes
-                            if prefix_lower == 'xmp':
-                                # pyexiv2 expects 'Xmp.prefix.tag' or just 'Xmp.tag'?
-                                # Usually 'Xmp.ns.tag'. We might need to guess the namespace if not provided.
-                                # For simplicity, let's assume if it's 'XMP:ProcessingStatus', it might mean 'Xmp.ProcessingStatus'
-                                xmp_tags[f"Xmp.{rest}"] = value
-                            elif prefix_lower == 'exif':
-                                exif_tags[f"Exif.{rest}"] = value
-                            elif prefix_lower == 'iptc':
-                                iptc_tags[f"Iptc.{rest}"] = value
-                            else:
-                                xmp_tags[tag] = value # Default to XMP?
-                        else:
-                            # If no prefix and no dot, we can't be sure.
-                            # But pyexiv2 requires specific full tag names like 'Exif.Image.Artist'.
-                            # If the user provides just 'Artist', it might fail.
-                            # We'll just pass it to all and let pyexiv2 handle or fail.
-                            xmp_tags[tag] = value
+                for key, value in tags.items():
+                    if not ':' in key:
+                        raise Exception("Invalid tag name")
 
-                if exif_tags:
-                    img.modify_exif(exif_tags)
-                if iptc_tags:
-                    img.modify_iptc(iptc_tags)
+                    prefix, tag = key.split(':', 1)
+                    prefix_lower = prefix.lower()
+                    if prefix_lower == 'xmp':
+                        # pyexiv2 format: 'Xmp.ns.tag'
+                        xmp_tags[f"Xmp.CyberHamster.{tag}"] = value
+
                 if xmp_tags:
+                    pyexiv2.registerNs('CyberHamster metadata', 'CyberHamster')
                     img.modify_xmp(xmp_tags)
             return True
         except Exception as e:

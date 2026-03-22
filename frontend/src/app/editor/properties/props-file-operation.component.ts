@@ -1,6 +1,6 @@
 import { Component, Input, OnChanges, signal } from '@angular/core';
 import { inject } from '@angular/core';
-import { EditorService } from '../editor.service';
+import { EditorService, VariableInfo } from '../editor.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -13,6 +13,19 @@ import { PropsBase } from './props-base';
     standalone: true,
     imports: [CommonModule, FormsModule, NzFormModule, NzInputModule, NzSelectModule],
     template: `
+        <nz-form-item>
+          <nz-form-label>Input File Source</nz-form-label>
+          <nz-form-control>
+            <nz-select
+              [ngModel]="config().input_file_var"
+              (ngModelChange)="updateConfig('input_file_var', $event)"
+              nzPlaceHolder="Select source node"
+              name="input_file_var"
+            >
+              <nz-option *ngFor="let i of availableVariables" [nzValue]="i.value" [nzLabel]="i.label"/>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
         <nz-form-item>
           <nz-form-label>Action</nz-form-label>
           <nz-form-control>
@@ -27,7 +40,20 @@ import { PropsBase } from './props-base';
           </nz-form-control>
         </nz-form-item>
         <nz-form-item *ngIf="config().action === 'overwrite'">
-          <nz-form-label>Target Extension (Optional, for rename)</nz-form-label>
+          <nz-form-label>Target File to Replace</nz-form-label>
+          <nz-form-control>
+            <nz-select
+              [ngModel]="config().target_file_var"
+              (ngModelChange)="updateConfig('target_file_var', $event)"
+              nzPlaceHolder="Select file to be replaced"
+              name="target_file_var"
+            >
+              <nz-option *ngFor="let i of availableVariables" [nzValue]="i.value" [nzLabel]="i.label"/>
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+        <nz-form-item *ngIf="config().action === 'overwrite'">
+          <nz-form-label>Target Extension (Optional)</nz-form-label>
           <nz-form-control>
             <input
               nz-input
@@ -41,4 +67,7 @@ import { PropsBase } from './props-base';
     `
 })
 export class PropsFileOperationComponent extends PropsBase implements OnChanges {
+    get availableVariables(): VariableInfo[] {
+        return this.editorService.getAvailableVariables(this.nodeId).filter(v => v.value.endsWith(':file'));
+    }
 }

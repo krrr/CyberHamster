@@ -17,15 +17,18 @@ SCENARIO_2_DAG = {
     "start_node": "node_0",
     "nodes": {
         "node_0": {"type": "StartNode", "name": "Start", "config": {}},
-        "node_1": {"type": "MetadataReadNode", "name": "Read MP4", "config": {}},
+        "node_1": {"type": "MetadataReadNode", "name": "Read MP4", "config": {"input_file_var": "node_0:file"}},
         "node_2": {"type": "FFmpegActionNode", "name": "Streamline Audio", "config": {
+            "input_file_var": "node_0:file",
             "args": "-map 0:v -map 0:a:0 -c:v copy -c:a aac -b:a 128k",
             "extension": ".mp4"
         }},
         "node_3": {"type": "FileOperationNode", "name": "Replace", "config": {
+            "input_file_var": "node_2:file",
             "action": "overwrite"
         }},
         "node_4": {"type": "MetadataWriteNode", "name": "Write Meta", "config": {
+            "input_file_var": "node_3:file",
             "tags": {"Processed": "True"},
             "write_to_original": False
         }}

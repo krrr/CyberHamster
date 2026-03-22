@@ -4,6 +4,11 @@ import { ClassicPreset, NodeEditor } from 'rete';
 import { AreaPlugin } from 'rete-area-plugin';
 
 
+export interface VariableInfo {
+    value: string; // "node_id:var_name"
+    label: string; // "Node Name > var_name"
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -38,8 +43,8 @@ export class EditorService {
         }
     }
 
-    getAvailableVariables(nodeId: string): string[] {
-        const variables = new Set<string>();
+    getAvailableVariables(nodeId: string): VariableInfo[] {
+        const variables: VariableInfo[] = [];
         const visited = new Set<string>();
         const queue = [nodeId];
 
@@ -50,28 +55,59 @@ export class EditorService {
 
             const connections = this.editor.getConnections().filter(c => c.target === currentId);
             for (const conn of connections) {
-                const sourceNodeId = conn.source;
-                queue.push(sourceNodeId);
+                const sourceId = conn.source;
+                queue.push(sourceId);
 
-                const sourceNode = this.editor.getNode(sourceNodeId) as any;
+                const sourceNode = this.editor.getNode(sourceId) as any;
+                const sourceConfig = this.nodeConfigs()[sourceId];
+                const nodeName = sourceConfig?.name || sourceNode?.label || sourceId;
+
+                const addVar = (varName: string) => {
+                    variables.push({
+                        value: `${sourceId}:${varName}`,
+                        label: `${nodeName} > ${varName}`
+                    });
+                };
+
                 if (sourceNode?.type === 'StartNode') {
-                    variables.add('file.size');
-                    variables.add('file.path');
-                    variables.add('original_file_path');
+                    addVar('file');
                 } else if (sourceNode?.type === 'CodeEvalNode') {
-                    const sourceConfig = this.nodeConfigs()[sourceNodeId];
-                    variables.add(sourceConfig?.config?.output_var || 'eval_result');
+                    addVar(sourceConfig?.config?.output_var || 'eval_result');
                 } else if (sourceNode?.type === 'MetadataReadNode') {
-                    variables.add('metadata');
+                    addVar('metadata');
+                } else if (sourceNode?.type === 'ConvertNode' || sourceNode?.type === 'FFmpegActionNode' || sourceNode?.type === 'FileOperationNode' || sourceNode?.type === 'MetadataWriteNode') {
+                    addVar('file');
                 } else {
-                    const sourceConfig = this.nodeConfigs()[sourceNodeId];
                     if (sourceConfig?.config?.output_var) {
-                        variables.add(sourceConfig.config.output_var);
+                        addVar(sourceConfig.config.output_var);
                     }
                 }
             }
         }
-        return Array.from(variables);
+        return variables;
+    }
+
+    // Call this after a connection is added to automatically link input_file_var
+    autoLinkVariable(connection: any) {
+        const sourceId = connection.source;
+        const targetId = connection.target;
+        const targetNode = this.editor.getNode(targetId) as any;
+        const sourceNode = this.editor.getNode(sourceId) as any;
+
+        // If target node is a node that usually takes a file input
+        const fileInputNodes = ['ConvertNode', 'FFmpegActionNode', 'MetadataReadNode', 'FileOperationNode'];
+        const targetConfig = this.nodeConfigs()[targetId]?.config;
+
+        if (fileInputNodes.includes(targetNode?.type)) {
+            // Only auto-link if not already set or if it's the first connection
+            if (!targetConfig?.input_file_var) {
+                this.updateNodeConfig(targetId, 'input_file_var', `${sourceId}:file`);
+            }
+        } else if (targetNode?.type === 'MetadataWriteNode') {
+            if (!targetConfig?.target_file_var) {
+                this.updateNodeConfig(targetId, 'target_file_var', `${sourceId}:file`);
+            }
+        }
     }
 
     async addNode(nodeType: string) {
@@ -114,7 +150,7 @@ export const NODE_INFO: Record<string, { icon: string; color: string, label: str
     ConvertNode: { icon: 'sync', color: '#f04951', label: 'Convert Format' },
     CodeEvalNode: { icon: 'code', color: '#945de1', label: 'Code Eval' },
     ConditionNode: { icon: 'branches', color: '#faad14', label: 'Condition Branch' },
-    FileOperationNode: { icon: 'file-text', color: '#e1449b', label: 'File Operation (Move/Clean)' },
+    FileOperationNode: { icon: 'file-text', color: '#e1449b', label: 'File Operation' },
     MetadataWriteNode: { icon: 'edit', color: '#13c2c2', label: 'Write Media Metadata' },
     FFmpegActionNode: { icon: 'video-camera', color: '#c2dd2f', label: 'FFmpeg Action' },
 };

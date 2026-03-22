@@ -24,6 +24,21 @@ class DAGNode:
         self.name = name
         self.config = config or {}
     
+    def get_input_file(self, inputs: Dict[str, Any]) -> Optional[FileObject]:
+        """Helper to get the input file object based on config or default."""
+        input_var = self.config.get("input_file_var")
+        if input_var:
+            return inputs.get(input_var)
+        
+        # Fallback: if there's only one variable ending with ':file', use it.
+        # This helps with transitions or simple chains.
+        file_vars = [v for k, v in inputs.items() if k.split(':')[-1] == 'file']
+        if len(file_vars) == 1:
+            return file_vars[0]
+        
+        # Last resort for StartNode or manual injections
+        return inputs.get("file")
+
     def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         """
         Execute the node logic.
@@ -37,7 +52,7 @@ class DAGNode:
 class StartNode(DAGNode):
     """Start node. Passes the initial file to downstream."""
     def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-        # For the start node, the input is expected to be provided by the executor directly
+        # For the start node, the input is provided directly by the executor as "file"
         file_obj = inputs.get("file")
         if not file_obj:
             logger.error(f"[{self.name}] No input file provided to StartNode.")
@@ -46,20 +61,24 @@ class StartNode(DAGNode):
         logger.info(f"[{self.name}] Starting pipeline for file: {file_obj.get('path')}")
         return True, "default", {"file": file_obj}
 
+
 class FinishNode(DAGNode):
     """End node. Represents successful completion of the DAG."""
     def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-        file_obj = inputs.get("file")
-        if not file_obj:
-            logger.warning(f"[{self.name}] Reached finish node without file object.")
+        result = None
+        result_var = self.config.get("result_var")
+        if not result_var:
+            logger.info(f"[{self.name}] Successfully completed pipeline.")
         else:
-            logger.info(f"[{self.name}] Successfully completed pipeline for file: {file_obj.get('path')}")
-        return True, None, {"status": "success", "file": file_obj}
+            result = inputs.get(result_var)
+            logger.info(f"[{self.name}] Successfully completed pipeline with result: {result}")
+        return True, None, {"status": "success", "result": result}
+
 
 class MetadataReadNode(DAGNode):
     """Reads metadata, stops if already processed."""
     def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-        file_obj = inputs.get("file")
+        file_obj = self.get_input_file(inputs)
         if not file_obj or "path" not in file_obj:
             logger.error(f"[{self.name}] No valid input file object provided.")
             return False, None, {}
@@ -86,7 +105,7 @@ class MetadataReadNode(DAGNode):
 class ConvertNode(DAGNode):
     """Converts image format."""
     def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-        file_obj = inputs.get("file")
+        file_obj = self.get_input_file(inputs)
         if not file_obj or "path" not in file_obj:
             logger.error(f"[{self.name}] No valid input file object provided.")
             return False, None, {}
@@ -155,6 +174,19 @@ class ConditionNode(DAGNode):
                 results.append(False)
                 continue
 
+            # Smart coercion: try to convert target to match val's type
+            if target is not None:
+                try:
+                    if isinstance(val, bool):
+                        if isinstance(target, str):
+                            target = target.lower() in ('true', '1', 't', 'y', 'yes')
+                    elif isinstance(val, int):
+                        target = int(float(target)) # Handle cases like "1.0" -> 1
+                    elif isinstance(val, float):
+                        target = float(target)
+                except (ValueError, TypeError):
+                    logger.warning(f"[{self.name}] Failed to coerce target '{target}' to {type(val).__name__}, using original value.")
+
             res = False
             try:
                 if operator == "<":
@@ -166,7 +198,7 @@ class ConditionNode(DAGNode):
                 else:
                     logger.error(f"[{self.name}] Unknown operator: {operator}")
             except Exception as e:
-                logger.error(f"[{self.name}] Error evaluating condition {var_name} {operator} {target} (value={val}): {e}")
+                logger.error(f"[{self.name}] Error evaluating condition {var_name} {operator} {target} (value={val}, type={type(val).__name__}): {e}")
 
             results.append(res)
             logger.info(f"[{self.name}] Evaluated {var_name} {operator} {target} (value={val}) -> {res}")
@@ -174,16 +206,16 @@ class ConditionNode(DAGNode):
         final_result = all(results) if relation == "and" else any(results)
         logger.info(f"[{self.name}] Final relation '{relation}' of {results} -> {final_result}")
         
-        out_dict = dict(inputs)
         if final_result:
-            return True, "true_branch", out_dict
+            return True, "true_branch", {}
         else:
-            return True, "false_branch", out_dict
+            return True, "false_branch", {}
 
 class FileOperationNode(DAGNode):
     """Moves, deletes, or overwrites files."""
     def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-        file_obj = inputs.get("file")
+        # Source file (the one we are moving/using)
+        file_obj = self.get_input_file(inputs)
         if not file_obj or "path" not in file_obj:
             logger.error(f"[{self.name}] No valid input file object provided.")
             return False, None, {}
@@ -191,43 +223,52 @@ class FileOperationNode(DAGNode):
         action = self.config.get("action") # "overwrite", "cleanup"
         
         if action == "overwrite":
+            # Destination file (the one we are replacing)
+            target_var = self.config.get("target_file_var")
+            target_obj = inputs.get(target_var) if target_var else None
+            
+            if not target_obj or "path" not in target_obj:
+                logger.error(f"[{self.name}] No valid target file object found in variable '{target_var}'.")
+                return False, None, {}
+
             current = file_obj["path"]
-            orig = context.original_file_path
+            dest_path = target_obj["path"]
 
             if not os.path.exists(current):
                 logger.error(f"[{self.name}] Source file for overwrite not found: {current}")
                 return False, None, {}
             
-            if current != orig:
+            if current != dest_path:
                 target_ext = self.config.get("target_extension")
                 if target_ext:
-                    base, _ = os.path.splitext(orig)
-                    new_dest = base + target_ext
+                    # If extension change is requested, we change the destination's extension
+                    base, _ = os.path.splitext(dest_path)
+                    new_dest = base + (target_ext if target_ext.startswith('.') else '.' + target_ext)
                     logger.info(f"[{self.name}] Moving {current} to {new_dest}")
                     try:
                         shutil.move(current, new_dest)
-                        # if extension changed, we might want to delete the original if it's different
-                        if new_dest != orig:
-                            if os.path.exists(orig):
-                                logger.info(f"[{self.name}] Removing original file: {orig}")
-                                os.remove(orig)
+                        # If destination path actually changed, remove the old one
+                        if new_dest != dest_path and os.path.exists(dest_path):
+                            logger.info(f"[{self.name}] Removing old target file: {dest_path}")
+                            os.remove(dest_path)
+                        
+                        # Update the path in the input object for downstream nodes
                         file_obj["path"] = new_dest
-                        # current file is no longer temporary
-                        if current in context.temp_files:
-                            context.temp_files.remove(current)
                     except OSError as e:
                         logger.error(f"[{self.name}] Failed to move file: {e}")
                         return False, None, {}
                 else:
-                    logger.info(f"[{self.name}] Overwriting {orig} with {current}")
+                    logger.info(f"[{self.name}] Overwriting {dest_path} with {current}")
                     try:
-                        shutil.move(current, orig)
-                        file_obj["path"] = orig
-                        if current in context.temp_files:
-                             context.temp_files.remove(current)
+                        shutil.move(current, dest_path)
+                        file_obj["path"] = dest_path
                     except OSError as e:
                         logger.error(f"[{self.name}] Failed to overwrite file: {e}")
                         return False, None, {}
+                
+                # If the source was a temporary file, it's no longer temporary (it's now the result)
+                if current in context.temp_files:
+                    context.temp_files.remove(current)
                          
         elif action == "cleanup":
              logger.info(f"[{self.name}] Explicit cleanup requested (handled by context at the end).")
@@ -241,18 +282,16 @@ class FileOperationNode(DAGNode):
 class MetadataWriteNode(DAGNode):
     """Writes metadata tags."""
     def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-        file_obj = inputs.get("file")
+        # Free choice of target file from variables
+        target_var = self.config.get("target_file_var")
+        file_obj = inputs.get(target_var) if target_var else self.get_input_file(inputs)
+
         if not file_obj or "path" not in file_obj:
-            logger.error(f"[{self.name}] No valid input file object provided.")
+            logger.error(f"[{self.name}] No valid target file object provided.")
             return False, None, {}
 
         tags = self.config.get("tags", {})
         target_file = file_obj["path"]
-        
-        # If the DAG failed/was rejected and we want to write to original
-        write_to_original = self.config.get("write_to_original", False)
-        if write_to_original:
-            target_file = context.original_file_path
             
         if not os.path.exists(target_file):
             logger.error(f"[{self.name}] Target file for metadata write not found: {target_file}")
@@ -273,10 +312,8 @@ class CodeEvalNode(DAGNode):
         code_str = self.config.get("code", "")
         output_var = self.config.get("output_var", "eval_result")
 
-        # args dictionary for code access
+        # args dictionary for code access. Now contains prefixed variables!
         args = dict(inputs)
-        # Also provide useful context
-        args['original_file_path'] = context.original_file_path
 
         local_vars = {"args": args, "os": os}
 
@@ -284,7 +321,7 @@ class CodeEvalNode(DAGNode):
             tree = ast.parse(code_str)
             if not tree.body:
                 logger.warning(f"[{self.name}] Empty code provided.")
-                return True, "default", dict(inputs)
+                return True, "default", {}
 
             last_stmt = tree.body[-1]
             if isinstance(last_stmt, ast.Expr):
@@ -298,9 +335,7 @@ class CodeEvalNode(DAGNode):
                 result = None
 
             logger.info(f"[{self.name}] Code evaluated successfully. Result: {result}")
-            out_dict = dict(inputs)
-            out_dict[output_var] = result
-            return True, "default", out_dict
+            return True, "default", {output_var: result}
 
         except Exception as e:
             logger.error(f"[{self.name}] Code evaluation failed: {e}")
@@ -310,7 +345,7 @@ class CodeEvalNode(DAGNode):
 class FFmpegActionNode(DAGNode):
     """Executes FFmpeg with specific parameters."""
     def execute(self, inputs: Dict[str, Any], context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-        file_obj = inputs.get("file")
+        file_obj = self.get_input_file(inputs)
         if not file_obj or "path" not in file_obj:
             logger.error(f"[{self.name}] No valid input file object provided.")
             return False, None, {}

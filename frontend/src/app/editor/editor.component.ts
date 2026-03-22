@@ -31,6 +31,7 @@ import { PropsMetadataWriteComponent } from './properties/props-metadata-write.c
 import { PropsFFmpegActionComponent } from './properties/props-ffmpeg-action.component';
 import { EditorService, NODE_INFO, TaskConnection, TaskNode } from './editor.service';
 import { FileDialogComponent } from '../components/file-dialog/file-dialog.component';
+import { PropsFinishComponent } from './properties/props-finish.component';
 
 type Schemes = GetSchemes<TaskNode, TaskConnection<TaskNode>>;
 type AreaExtra = AngularArea2D<Schemes>;
@@ -57,6 +58,7 @@ type AreaExtra = AngularArea2D<Schemes>;
         PropsFileOperationComponent,
         PropsMetadataWriteComponent,
         PropsFFmpegActionComponent,
+        PropsFinishComponent,
         FileDialogComponent,
     ],
     providers: [EditorService],
@@ -223,6 +225,8 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
             if (context.type === 'zoomed') {
                 const scale = this.area.area.transform.k;
                 this.zoomLevel.set(Math.round(scale * 100) + '%');
+            } else if (context.type === 'connectioncreated') {
+                this.editorService.autoLinkVariable(context.data);
             }
             return context;
         });
