@@ -95,7 +95,7 @@ class TaskManager:
         max_workers = self._get_max_concurrent_tasks()
         
         # Initialize pool with the latest settings
-        self.executor_pool = ThreadPoolExecutor(max_workers=max_workers)
+        self.executor_pool = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="Executor")
 
         self.observer.start()
         self._is_running = True

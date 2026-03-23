@@ -5,12 +5,16 @@ import time
 import uuid
 import shlex
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from typing import List, Optional
 from ..logger import logger
 
 from sqlmodel import Session
 from ..db import engine
 from ..models import SystemSettings
+
+# A thread pool only for pipe readers
+_magick_executor = ThreadPoolExecutor(max_workers=64, thread_name_prefix="Magick")
 
 class MagickProcess:
     def __init__(self, executable_path: str):
@@ -27,10 +31,9 @@ class MagickProcess:
         self.is_dead = False
         self.last_used_time = time.time()
         
-        self.stdout_thread = threading.Thread(target=self._read_stdout, daemon=True)
-        self.stderr_thread = threading.Thread(target=self._read_stderr, daemon=True)
-        self.stdout_thread.start()
-        self.stderr_thread.start()
+        # Submit reader tasks to the thread pool
+        _magick_executor.submit(self._read_stdout)
+        _magick_executor.submit(self._read_stderr)
         
         # Thread lock for execution to prevent overlapping if misused. Just in case
         self.lock = threading.Lock()
@@ -262,5 +265,10 @@ async def magick_pool_reaper():
     """Background task to reap idle ImageMagick processes."""
     while True:
         await asyncio.sleep(60)
-        _magick_pool.reap_idle()
+        # Use thread pool to run the synchronous reap_idle method to avoid blocking the event loop
+        try:
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(_magick_executor, _magick_pool.reap_idle)
+        except Exception as e:
+            logger.error(f"Error in magick_pool_reaper: {e}")
 
