@@ -11,6 +11,7 @@ from cyberhamster.db import init_db, get_session
 from cyberhamster.api import router as api_router
 from sqlmodel import Session
 from cyberhamster.task_manager import task_manager
+from cyberhamster.tools.imagemagick_wrapper import magick_pool_reaper
 
 app = FastAPI(title="CyberHamster Backend")
 
@@ -18,6 +19,7 @@ app = FastAPI(title="CyberHamster Backend")
 def on_startup():
     init_db()
     task_manager.start()
+    asyncio.create_task(magick_pool_reaper())
 
 @app.on_event("shutdown")
 def on_shutdown():
@@ -103,5 +105,4 @@ frontend_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static
 # but it will be populated by Angular build later.
 os.makedirs(frontend_path, exist_ok=True)
 app.mount("/", StaticFiles(directory=frontend_path, html=True), name="static")
-
 

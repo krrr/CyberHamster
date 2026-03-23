@@ -27,3 +27,4 @@ class SystemSettings(SQLModel, table=True):
     ffmpeg_path: str = Field(default="ffmpeg")
     imagemagick_path: str = Field(default="magick")
     exiftool_path: str = Field(default="exiftool") # or pyexiv2 if not using CLI
+    magick_pool_max_size: int = Field(default=4)

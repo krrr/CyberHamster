@@ -3,13 +3,14 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../api.service';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
+import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { COMMON_IMPORTS } from '../shared-imports';
 
 @Component({
     selector: 'app-settings',
     standalone: true,
-    imports: [FormsModule, NzFormModule, NzInputModule, ...COMMON_IMPORTS],
+    imports: [FormsModule, NzFormModule, NzInputModule, NzInputNumberModule, ...COMMON_IMPORTS],
     templateUrl: './settings.component.html',
     styleUrls: ['./settings.component.scss'],
 })
@@ -17,6 +18,7 @@ export class SettingsComponent implements OnInit {
     settings = signal({
         ffmpeg_path: 'ffmpeg',
         imagemagick_path: 'magick',
+        magick_pool_max_size: 4,
     });
 
     constructor(
@@ -42,7 +44,7 @@ export class SettingsComponent implements OnInit {
         });
     }
 
-    updateField(field: string, value: string) {
-        this.settings.update((s) => ({ ...s, [field]: value }));
+    updateField(field: string, value: any) {
+        this.settings.update((s: any) => ({ ...s, [field]: value }));
     }
 }
