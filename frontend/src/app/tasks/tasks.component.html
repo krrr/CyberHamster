@@ -50,10 +50,14 @@
 
   <nz-empty
     *ngIf="tasks().length === 0"
-    nzNotFoundImage="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
-    nzNotFoundContent="No tasks found."
+    nzNotFoundImage="assets/empty.svg"
+     [nzNotFoundContent]="contentTpl"
   >
-    <button nz-button nzType="primary" (click)="showModal()">Create First Task</button>
+    <ng-template #contentTpl>
+      <span style="color: #8c8c8c; font-size: 16px">No tasks created yet</span>
+      <br />
+      <span style="color: #bfbfbf">Task define the processing pipeline for your files.</span>
+    </ng-template>
   </nz-empty>
 
   <nz-modal
