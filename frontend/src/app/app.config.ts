@@ -41,6 +41,8 @@ import {
     CoffeeOutline,
     HeartOutline,
     SmileOutline,
+    FullscreenOutline,
+    FullscreenExitOutline,
 } from '@ant-design/icons-angular/icons';
 
 registerLocaleData(en);
@@ -77,6 +79,8 @@ const icons: IconDefinition[] = [
     CoffeeOutline,
     HeartOutline,
     SmileOutline,
+    FullscreenOutline,
+    FullscreenExitOutline,
 ];
 
 export const appConfig: ApplicationConfig = {

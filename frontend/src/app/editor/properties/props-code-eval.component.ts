@@ -1,29 +1,36 @@
 import { Component, Input, OnChanges, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { NzFormModule } from 'ng-zorro-antd/form';
-import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzSelectModule } from 'ng-zorro-antd/select';
-import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzCodeEditorModule } from 'ng-zorro-antd/code-editor';
 import { PropsBase } from './props-base';
 import { VariableInfo } from '../editor.service';
+import { COMMON_IMPORTS } from '../../shared-imports';
+import type { editor } from 'monaco-editor';
 
 @Component({
     selector: 'app-code-eval-props',
     standalone: true,
-    imports: [CommonModule, FormsModule, NzFormModule, NzInputModule, NzSelectModule, NzButtonModule, NzCodeEditorModule],
+    imports: [NzFormModule, NzSelectModule, NzCodeEditorModule, ...COMMON_IMPORTS],
     template: `
         <nz-form-item>
           <nz-form-label style="width: 100%; text-align: left">Python Code</nz-form-label>
           <nz-form-control>
-            <nz-code-editor
-              class="editor"
-              [nzEditorOption]="editorOpt"
-              [ngModel]="config().code"
-              (ngModelChange)="updateConfig('code', $event)"
-              style=""
-            ></nz-code-editor>
+            <div class="editor-wrap" [class.expanded]="isExpanded()">
+              <button nz-button nzShape="circle" class="expand-btn"
+                (click)="toggleExpand()" [nzSize]="isExpanded() ? 'default' : 'small'"
+                [title]="isExpanded() ? 'Minimize' : 'Expand'"
+              >
+                <i nz-icon [nzType]="isExpanded() ? 'fullscreen-exit' : 'fullscreen'"></i>
+              </button>
+              <nz-code-editor
+                class="editor"
+                [nzEditorOption]="editorOpt"
+                [ngModel]="config().code"
+                (ngModelChange)="updateConfig('code', $event)"
+                (nzEditorInitialized)="onEditorInit($event)" 
+              />
+            </div>
+            <div *ngIf="isExpanded()" class="ant-modal-mask" (click)="toggleExpand()"></div>
           </nz-form-control>
         </nz-form-item>
         <nz-form-item>
@@ -53,15 +60,63 @@ import { VariableInfo } from '../editor.service';
         </nz-form-item>
     `,
     styles: [`
-      .editor {
-        overflow: hidden;
+      .editor-wrap {
+        position: relative;
         height: 200px;
+        // transition: all 0.2s ease-in-out;
+        button {
+          transition-property: color, border-color, opacity;
+        }
+      }
+      .editor-wrap.expanded {
+        position: fixed;
+        top: 5vh;
+        left: calc(50% - 500px);
+        width: 1000px;
+        height: 90vh;
+        z-index: 2000;
+        border-radius: 2px;
+        box-shadow: 0 3px 6px -4px #0000001f, 0 6px 16px #00000014, 0 9px 28px 8px #0000000d;
+      }
+      .editor-wrap:not(.expanded) {
+        button {
+          opacity: 1;
+          top: -28px;
+          right: 0px;
+        }
+      }
+
+      .editor {
+        height: 100%;
+        width: 100%;
         border: 1px solid #d9d9d9;
         border-radius: 2px;
+        overflow: hidden;
+      }
+
+      .expand-btn {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        z-index: 10001;
+        opacity: 0.6;
+      }
+
+      .expand-btn:hover {
+        opacity: 1;
       }
     `]
 })
 export class PropsCodeEvalComponent extends PropsBase implements OnChanges {
+    isExpanded = signal(false);
+    editor?: editor.ICodeEditor | editor.IEditor;
+
+
+    toggleExpand() {
+        this.isExpanded.set(!this.isExpanded());
+        setTimeout(() => this.editor?.layout(), 50);
+    }
+
     editorOpt = {
         language: 'python',
         minimap: { enabled: false },
@@ -69,6 +124,10 @@ export class PropsCodeEvalComponent extends PropsBase implements OnChanges {
         glyphMargin: false,
         folding: false,
         // lineDecorationsWidth: 0
+    }
+
+    onEditorInit(e: editor.ICodeEditor | editor.IEditor) {
+        this.editor = e;
     }
 
     get availableVariables(): VariableInfo[] {
