@@ -45,23 +45,25 @@ class FolderEventHandler(FileSystemEventHandler):
             self.recently_processed[file_path] = now
             logger.info(f"Folder {self.folder_id} detected change for: {file_path}")
 
-            task_obj = session.get(Task, folder.task_id)
-            if not task_obj:
-                logger.error(f"Task {folder.task_id} not found for folder {self.folder_id}")
+            tasks = folder.tasks
+            if not tasks:
+                logger.warning(f"No tasks found for folder {self.folder_id}")
                 return
-            task_json = task_obj.json_data
+            
+            task_jsons = [t.json_data for t in tasks]
 
-        executor = TaskExecutor(task_json)
+        for i in task_jsons:
+            executor = TaskExecutor(i)
 
-        # Fire and forget execution to avoid blocking watchdog thread
-        def run_executor():
-            try:
-                executor.execute(file_path)
-            except Exception as e:
-                logger.error(f"Executor failed for {file_path}: {e}")
+            # Fire and forget execution to avoid blocking watchdog thread
+            def run_executor(exec_obj, path):
+                try:
+                    exec_obj.execute(path)
+                except Exception as e:
+                    logger.error(f"Executor failed for {path}: {e}")
 
-        # Use the thread pool to execute the task, respecting the max_workers limit
-        self.executor_pool.submit(run_executor)
+            # Use the thread pool to execute the task, respecting the max_workers limit
+            self.executor_pool.submit(run_executor, executor, file_path)
 
     def on_created(self, event):
         self._handle_event(event.src_path)

@@ -3,12 +3,13 @@ import sys
 import ctypes
 import asyncio
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from sqlalchemy.orm import selectinload, defer
 from sqlmodel import Session, select
-from typing import List, Any, Dict
+from typing import List, Any, Dict, Optional
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from .db import get_session
-from .models import Task, Folder, SystemSettings
+from .models import Task, Folder, SystemSettings, FolderTaskLink
 from .engine.executor import TaskExecutor
 
 router = APIRouter()
@@ -17,6 +18,12 @@ class ExecutionRequest(BaseModel):
     task: Dict[str, Any] = None
     task_id: int = None
     file_path: str
+
+# Schema for Folder API
+class FolderCreate(BaseModel):
+    folder: Folder
+    task_ids: Optional[List[int]] = None
+
 
 @router.post("/execute")
 async def execute_task_endpoint(request: ExecutionRequest):
@@ -85,9 +92,11 @@ async def websocket_endpoint(websocket: WebSocket):
         manager.disconnect(websocket)
 # --- Task ---
 
-@router.get("/tasks", response_model=List[Task])
+@router.get("/tasks")
 def get_tasks(session: Session = Depends(get_session)):
-    return session.exec(select(Task)).all()
+    tasks = session.exec(select(Task).options(defer(Task.json_data), selectinload(Task.folders))).all()
+    # 不用fastapi推荐的定义专用response_model的啰嗦写法
+    return [{**i.model_dump(), "folders": [f.model_dump(include=['name']) for f in i.folders]} for i in tasks]
 
 @router.get("/tasks/{task_id}", response_model=Task)
 def get_task(task_id: int, session: Session = Depends(get_session)):
@@ -131,9 +140,9 @@ def delete_task(task_id: int, session: Session = Depends(get_session)):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    # Check if there are folders using this Task
-    folders = session.exec(select(Folder).where(Folder.task_id == task_id)).all()
-    if folders:
+    # Check if there are folders using this Task via Link table
+    link = session.exec(select(FolderTaskLink).where(FolderTaskLink.task_id == task_id)).first()
+    if link:
         raise HTTPException(status_code=400, detail="Cannot delete Task. It is used by existing folders.")
 
     session.delete(task)
@@ -142,16 +151,21 @@ def delete_task(task_id: int, session: Session = Depends(get_session)):
 
 # --- Folder ---
 
-@router.get("/folders", response_model=List[Folder])
+@router.get("/folders")
 def get_folders(session: Session = Depends(get_session)):
-    return session.exec(select(Folder)).all()
+    folders = session.exec(select(Folder).options(selectinload(Folder.tasks))).all()
+    return [{**i.model_dump(), "tasks": [t.model_dump(include=['id', 'name']) for t in i.tasks]} for i in folders]
 
 @router.post("/folders", response_model=Folder)
-def create_folder(folder: Folder, session: Session = Depends(get_session)):
-    # Verify Task exists
-    task = session.get(Task, folder.task_id)
-    if not task:
-        raise HTTPException(status_code=400, detail="Invalid Task ID")
+def create_folder(req: FolderCreate, session: Session = Depends(get_session)):
+    folder = req.folder
+    folder.id = None # Ensure it's a new record
+    
+    if req.task_ids:
+        tasks = session.exec(select(Task).where(Task.id.in_(req.task_ids))).all()
+        if len(tasks) != len(req.task_ids):
+             raise HTTPException(status_code=400, detail="One or more Task IDs are invalid")
+        folder.tasks = tasks
 
     session.add(folder)
     session.commit()
@@ -164,36 +178,29 @@ def create_folder(folder: Folder, session: Session = Depends(get_session)):
     return folder
 
 @router.put("/folders/{folder_id}", response_model=Folder)
-def update_folder(folder_id: int, folder_update: Folder, session: Session = Depends(get_session)):
+def update_folder(folder_id: int, req: FolderCreate, session: Session = Depends(get_session)):
     folder = session.get(Folder, folder_id)
     if not folder:
         raise HTTPException(status_code=404, detail="Folder not found")
 
-    update_data = folder_update.model_dump(exclude_unset=True)
-
-    # Check if Task exists if updating Task ID
-    if "task_id" in update_data and update_data["task_id"] != folder.task_id:
-        task = session.get(Task, update_data["task_id"])
-        if not task:
-            raise HTTPException(status_code=400, detail="Invalid Task ID")
-
-    # If watch_folder changed or status changed, we need to update the task manager
-    needs_manager_update = False
-    old_folder = folder.watch_folder
-
+    old_folder_path = folder.watch_folder
+    
+    update_data = req.folder.model_dump(exclude_unset=True, exclude={"id", "created_at"})
     for key, value in update_data.items():
-        if key != "id":
-            if key in ("watch_folder", "status", "task_id", "real_time_watch", "scan_interval", "filename_regex") and getattr(folder, key) != value:
-                needs_manager_update = True
-            setattr(folder, key, value)
+        setattr(folder, key, value)
+
+    if req.task_ids is not None:
+        tasks = session.exec(select(Task).where(Task.id.in_(req.task_ids))).all()
+        if len(tasks) != len(req.task_ids):
+             raise HTTPException(status_code=400, detail="One or more Task IDs are invalid")
+        folder.tasks = tasks
 
     session.add(folder)
     session.commit()
     session.refresh(folder)
 
-    if needs_manager_update:
-        from .task_manager import task_manager
-        task_manager.update_folder(folder, old_folder)
+    from .task_manager import task_manager
+    task_manager.update_folder(folder, old_folder_path)
 
     return folder
 

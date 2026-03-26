@@ -39,8 +39,8 @@
       <div class="folder-list" (click)="openEditor(task.id)">
         <span nz-icon nzType="folder"></span>
         <div style="margin-left: 10px; color: #595959">
-          <nz-tag *ngFor="let folder of getAssociatedFolders(task.id)" [title]="folder.watch_folder">{{ folder.name }}</nz-tag>
-          <div *ngIf="getAssociatedFolders(task.id).length === 0">
+          <nz-tag *ngFor="let f of task.folders" [title]="f.watch_folder">{{ f.name }}</nz-tag>
+          <div *ngIf="task.folders.length === 0">
             <i>None</i>
           </div>
         </div>

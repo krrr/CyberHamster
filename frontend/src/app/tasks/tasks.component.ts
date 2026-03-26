@@ -39,7 +39,6 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 })
 export class TasksComponent implements OnInit {
     tasks = signal<any[]>([]);
-    folders = signal<any[]>([]);
 
     isModalVisible = signal(false);
     isEditing = signal(false);
@@ -56,23 +55,12 @@ export class TasksComponent implements OnInit {
 
     ngOnInit() {
         this.loadTasks();
-        this.loadFolders();
     }
 
     loadTasks() {
         this.apiService.getTasks().subscribe((tasks) => {
             this.tasks.set(tasks);
         });
-    }
-
-    loadFolders() {
-        this.apiService.getFolders().subscribe((folders) => {
-            this.folders.set(folders);
-        });
-    }
-
-    getAssociatedFolders(taskId: number): any[] {
-        return this.folders().filter((f) => f.task_id === taskId);
     }
 
     showModal(task?: any) {

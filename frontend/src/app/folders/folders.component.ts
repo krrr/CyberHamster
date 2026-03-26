@@ -53,7 +53,7 @@ export class FoldersComponent implements OnInit {
         name: '',
         watch_folder: '',
         status: 'active',
-        task_id: null as number | null,
+        task_ids: [] as number[],
         scan_interval: 60,
         real_time_watch: true,
         filename_regex: '',
@@ -90,7 +90,7 @@ export class FoldersComponent implements OnInit {
                 name: folder.name,
                 watch_folder: folder.watch_folder,
                 status: folder.status,
-                task_id: folder.task_id,
+                task_ids: folder.tasks ? folder.tasks.map((t: any) => t.id) : [],
                 scan_interval: folder.scan_interval !== undefined ? folder.scan_interval : 60,
                 real_time_watch: folder.real_time_watch !== undefined ? folder.real_time_watch : true,
                 filename_regex: folder.filename_regex || '',
@@ -102,7 +102,7 @@ export class FoldersComponent implements OnInit {
                 name: '',
                 watch_folder: '',
                 status: 'active',
-                task_id: this.tasks().length > 0 ? this.tasks()[0].id : null,
+                task_ids: [],
                 scan_interval: 60,
                 real_time_watch: true,
                 filename_regex: '',
@@ -117,19 +117,31 @@ export class FoldersComponent implements OnInit {
 
     handleOk() {
         const currentForm = this.folderForm();
-        if (!currentForm.name || !currentForm.watch_folder || !currentForm.task_id) {
+        if (!currentForm.name || !currentForm.watch_folder || !currentForm.task_ids.length) {
             this.message.warning('Please fill all required fields (Name, Watch Folder, Task)');
             return;
         }
 
+        const payload = {
+            folder: {
+                name: currentForm.name,
+                watch_folder: currentForm.watch_folder,
+                status: currentForm.status,
+                scan_interval: currentForm.scan_interval,
+                real_time_watch: currentForm.real_time_watch,
+                filename_regex: currentForm.filename_regex,
+            },
+            task_ids: currentForm.task_ids
+        };
+
         if (this.isEditing() && this.editingFolderId()) {
-            this.apiService.updateFolder(this.editingFolderId()!, currentForm).subscribe(() => {
+            this.apiService.updateFolder(this.editingFolderId()!, payload).subscribe(() => {
                 this.message.success('Folder updated');
                 this.loadFolders();
                 this.isModalVisible.set(false);
             });
         } else {
-            this.apiService.createFolder(currentForm).subscribe(() => {
+            this.apiService.createFolder(payload).subscribe(() => {
                 this.message.success('Folder created');
                 this.loadFolders();
                 this.isModalVisible.set(false);
@@ -146,7 +158,18 @@ export class FoldersComponent implements OnInit {
 
     toggleFolderStatus(folder: any) {
         const newStatus = folder.status === 'active' ? 'paused' : 'active';
-        this.apiService.updateFolder(folder.id, { status: newStatus }).subscribe(() => {
+        const payload = {
+            folder: {
+                name: folder.name,
+                watch_folder: folder.watch_folder,
+                status: newStatus,
+                scan_interval: folder.scan_interval,
+                real_time_watch: folder.real_time_watch,
+                filename_regex: folder.filename_regex,
+            },
+            task_ids: folder.tasks ? folder.tasks.map((t: any) => t.id) : []
+        };
+        this.apiService.updateFolder(folder.id, payload).subscribe(() => {
             this.message.success(`Folder ${newStatus === 'active' ? 'resumed' : 'paused'}`);
             this.loadFolders();
         });

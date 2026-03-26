@@ -9,7 +9,7 @@
       <tr>
         <th>Name</th>
         <th>Watch Path</th>
-        <th>Task</th>
+        <th>Tasks</th>
         <th>Status</th>
         <th>Actions</th>
       </tr>
@@ -19,8 +19,12 @@
         <td>{{ folder.name }}</td>
         <td>{{ folder.watch_folder }}</td>
         <td>
-          <span style="font-size: 1.2em; margin-right: 4px">{{ getTaskIcon(folder.task_id) }}</span>
-          {{ getTaskName(folder.task_id) }}
+          <div style="display: flex; flex-wrap: wrap; gap: 4px">
+            <nz-tag *ngFor="let task of folder.tasks" nzColor="blue">
+              <span style="margin-right: 4px">{{ task.icon || '🐹' }}</span>
+              {{ task.name }}
+            </nz-tag>
+          </div>
         </td>
         <td>
           <nz-tag [nzColor]="folder.status === 'active' ? 'green' : 'red'">
@@ -93,13 +97,14 @@
             </nz-form-item>
 
             <nz-form-item>
-              <nz-form-label nzRequired>Task</nz-form-label>
-              <nz-form-control nzErrorTip="Please select a task!">
+              <nz-form-label nzRequired>Tasks</nz-form-label>
+              <nz-form-control nzErrorTip="Please select at least one task!">
                 <nz-select
-                  [ngModel]="folderForm().task_id"
-                  (ngModelChange)="updateForm('task_id', $event)"
-                  name="task_id"
-                  nzPlaceHolder="Select a task"
+                  nzMode="multiple"
+                  [ngModel]="folderForm().task_ids"
+                  (ngModelChange)="updateForm('task_ids', $event)"
+                  name="task_ids"
+                  nzPlaceHolder="Select tasks"
                 >
                   <nz-option *ngFor="let t of tasks()" [nzValue]="t.id" [nzLabel]="(t.icon || '🐹') + ' ' + t.name"></nz-option>
                 </nz-select>

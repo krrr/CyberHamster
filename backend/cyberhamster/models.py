@@ -1,6 +1,10 @@
-from typing import Optional, Any, Dict
-from sqlmodel import SQLModel, Field, Column, JSON
+from typing import Optional, Any, Dict, List
+from sqlmodel import SQLModel, Field, Column, JSON, Relationship
 from datetime import datetime
+
+class FolderTaskLink(SQLModel, table=True):
+    folder_id: Optional[int] = Field(default=None, foreign_key="folder.id", primary_key=True)
+    task_id: Optional[int] = Field(default=None, foreign_key="task.id", primary_key=True)
 
 class Task(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -11,16 +15,19 @@ class Task(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
+    folders: List["Folder"] = Relationship(back_populates="tasks", link_model=FolderTaskLink)
+
 class Folder(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
-    task_id: int = Field(foreign_key="task.id")
     watch_folder: str
     status: str = Field(default="active") # active, paused
     scan_interval: int = Field(default=60)
     real_time_watch: bool = Field(default=True)
     filename_regex: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    tasks: List[Task] = Relationship(back_populates="folders", link_model=FolderTaskLink)
 
 class SystemSettings(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

@@ -15,8 +15,8 @@ describe('Folders', () => {
     let messageServiceSpy: any;
 
     const mockFolders = [
-        { id: 1, name: 'Folder 1', watch_folder: '/path1', status: 'active', task_id: 1, scan_interval: 60, real_time_watch: true },
-        { id: 2, name: 'Folder 2', watch_folder: '/path2', status: 'paused', task_id: 2, scan_interval: 120, real_time_watch: false }
+        { id: 1, name: 'Folder 1', watch_folder: '/path1', status: 'active', tasks: [{ id: 1, name: 'Task 1' }], scan_interval: 60, real_time_watch: true },
+        { id: 2, name: 'Folder 2', watch_folder: '/path2', status: 'paused', tasks: [{ id: 2, name: 'Task 2' }], scan_interval: 120, real_time_watch: false }
     ];
 
     const mockTasks = [
@@ -69,7 +69,7 @@ describe('Folders', () => {
         expect(component.isEditing()).toBe(false);
         expect(component.editingFolderId()).toBeNull();
         expect(component.isModalVisible()).toBe(true);
-        expect(component.folderForm().task_id).toBe(1); // Should default to first task id
+        expect(component.folderForm().task_ids).toEqual([]); 
     });
 
     it('should show modal for editing existing folder', () => {
@@ -86,7 +86,7 @@ describe('Folders', () => {
             name: 'New Folder',
             watch_folder: '/new/path',
             status: 'active',
-            task_id: 1,
+            task_ids: [1],
             scan_interval: 60,
             real_time_watch: true,
             filename_regex: ''
@@ -114,7 +114,7 @@ describe('Folders', () => {
             name: '',
             watch_folder: '',
             status: 'active',
-            task_id: null,
+            task_ids: [],
             scan_interval: 60,
             real_time_watch: true,
             filename_regex: ''
