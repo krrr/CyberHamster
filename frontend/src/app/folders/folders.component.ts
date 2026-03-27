@@ -160,18 +160,4 @@ export class FoldersComponent implements OnInit {
     openFileDialog() {
         this.isFileDialogVisible = true;
     }
-
-    onFolderSelected(path: string) {
-        this.updateForm('watch_folder', path);
-    }
-
-    getTaskName(taskId: number): string {
-        const task = this.tasks().find((t) => t.id === taskId);
-        return task ? task.name : 'Unknown Task';
-    }
-
-    getTaskIcon(taskId: number): string {
-        const task = this.tasks().find((t) => t.id === taskId);
-        return task ? task.icon || '🐹' : '❓';
-    }
 }

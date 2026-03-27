@@ -1,7 +1,7 @@
 <div class="folders-container">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px">
         <h2>Folders Manager</h2>
-        <button nz-button nzType="primary" (click)="showModal()">Create New Folder</button>
+        <button nz-button nzType="primary" (click)="showModal()"><nz-icon nzType="plus"/> Folder</button>
     </div>
 
     <nz-table #basicTable [nzData]="folders()" *ngIf="folders().length > 0">
@@ -130,5 +130,5 @@
     </nz-modal>
 
     <app-file-dialog [(isVisible)]="isFileDialogVisible" mode="folder" [currentPath]="folderForm().watch_folder || null"
-        (fileSelected)="onFolderSelected($event)"></app-file-dialog>
+        (fileSelected)="updateForm('watch_folder', $event)"></app-file-dialog>
 </div>
