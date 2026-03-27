@@ -7,6 +7,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 
 import { FoldersComponent } from './folders.component';
 import { ApiService } from '../api.service';
+import { createDefaultFolderForm, Folder, FolderForm } from '../interfaces/folder.interface';
 
 describe('Folders', () => {
     let component: FoldersComponent;
@@ -14,7 +15,7 @@ describe('Folders', () => {
     let apiServiceSpy: any;
     let messageServiceSpy: any;
 
-    const mockFolders = [
+    const mockFolders: Folder[] = [
         { id: 1, name: 'Folder 1', watch_folder: '/path1', status: 'active', tasks: [{ id: 1, name: 'Task 1' }], scan_interval: 60, real_time_watch: true },
         { id: 2, name: 'Folder 2', watch_folder: '/path2', status: 'paused', tasks: [{ id: 2, name: 'Task 2' }], scan_interval: 120, real_time_watch: false }
     ];
@@ -82,19 +83,25 @@ describe('Folders', () => {
 
     it('should handle Ok to create folder', () => {
         component.showModal();
-        component.folderForm.set({
+        const folderData = {
             name: 'New Folder',
             watch_folder: '/new/path',
-            status: 'active',
+            status: 'active' as const,
             task_ids: [1],
             scan_interval: 60,
             real_time_watch: true,
             filename_regex: ''
-        });
+        } as FolderForm;
+        component.folderForm.set(folderData);
 
         component.handleOk();
 
-        expect(apiServiceSpy.createFolder).toHaveBeenCalledWith(component.folderForm());
+        const expectedPayload = {
+            folder: {...folderData, task_ids: undefined},
+            task_ids: folderData.task_ids
+        };
+
+        expect(apiServiceSpy.createFolder).toHaveBeenCalledWith(expectedPayload);
         expect(messageServiceSpy.success).toHaveBeenCalledWith('Folder created');
         expect(component.isModalVisible()).toBe(false);
     });
@@ -103,22 +110,20 @@ describe('Folders', () => {
         component.showModal(mockFolders[0]);
         component.handleOk();
 
-        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(1, component.folderForm());
+        const currentForm = component.folderForm();
+        const expectedPayload = {
+            folder: { ...currentForm, task_ids: undefined },
+            task_ids: currentForm.task_ids
+        };
+
+        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(1, expectedPayload);
         expect(messageServiceSpy.success).toHaveBeenCalledWith('Folder updated');
         expect(component.isModalVisible()).toBe(false);
     });
 
     it('should require mandatory fields on handleOk', () => {
         component.showModal();
-        component.folderForm.set({
-            name: '',
-            watch_folder: '',
-            status: 'active',
-            task_ids: [],
-            scan_interval: 60,
-            real_time_watch: true,
-            filename_regex: ''
-        });
+        component.folderForm.set(createDefaultFolderForm());
 
         component.handleOk();
 
@@ -134,11 +139,17 @@ describe('Folders', () => {
 
     it('should toggle folder status', () => {
         component.toggleFolderStatus(mockFolders[0]); // active -> paused
-        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(1, { status: 'paused' });
+        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(1, {
+            folder: { ...mockFolders[0], status: 'paused' },
+            task_ids: [1]
+        });
         expect(messageServiceSpy.success).toHaveBeenCalledWith('Folder paused');
 
         component.toggleFolderStatus(mockFolders[1]); // paused -> active
-        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(2, { status: 'active' });
+        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(2, {
+            folder: { ...mockFolders[1], status: 'active' },
+            task_ids: [2]
+        });
         expect(messageServiceSpy.success).toHaveBeenCalledWith('Folder resumed');
     });
 });

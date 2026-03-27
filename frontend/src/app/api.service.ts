@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
+import { Folder } from './interfaces/folder.interface';
+import { Task } from './interfaces/task.interface';
 
 @Injectable({
     providedIn: 'root',
@@ -11,44 +13,44 @@ export class ApiService {
 
     constructor(private http: HttpClient) {}
 
-    executeTask(task: any, filePath: string, taskId?: number): Observable<any> {
-        return this.http.post('/api/execute', { task, task_id: taskId, file_path: filePath });
+    executeTask(task: any, filePath: string, taskId?: number) {
+        return this.http.post<any>('/api/execute', { task, task_id: taskId, file_path: filePath });
     }
 
-    getTasks(): Observable<any[]> {
-        return this.http.get<any[]>('/api/tasks');
+    getTasks() {
+        return this.http.get<Task[]>('/api/tasks');
     }
 
-    getTask(id: number): Observable<any> {
-        return this.http.get<any>(`/api/tasks/${id}`);
+    getTask(id: number) {
+        return this.http.get<Task>(`/api/tasks/${id}`);
     }
 
-    createTask(task: any): Observable<any> {
-        return this.http.post('/api/tasks', task);
+    createTask(task: any) {
+        return this.http.post<Task>('/api/tasks', task);
     }
 
-    updateTask(id: number, task: any): Observable<any> {
-        return this.http.put(`/api/tasks/${id}`, task);
+    updateTask(id: number, task: any) {
+        return this.http.put<Task>(`/api/tasks/${id}`, task);
     }
 
-    deleteTask(id: number): Observable<any> {
-        return this.http.delete(`/api/tasks/${id}`);
+    deleteTask(id: number) {
+        return this.http.delete<any>(`/api/tasks/${id}`);
     }
 
-    getFolders(): Observable<any[]> {
-        return this.http.get<any[]>('/api/folders');
+    getFolders() {
+        return this.http.get<Folder[]>('/api/folders');
     }
 
-    createFolder(folder: any): Observable<any> {
-        return this.http.post('/api/folders', folder);
+    createFolder(folder: any) {
+        return this.http.post<Folder>('/api/folders', folder);
     }
 
-    updateFolder(id: number, folder: any): Observable<any> {
-        return this.http.put(`/api/folders/${id}`, folder);
+    updateFolder(id: number, folder: any) {
+        return this.http.put<Folder>(`/api/folders/${id}`, folder);
     }
 
-    deleteFolder(id: number): Observable<any> {
-        return this.http.delete(`/api/folders/${id}`);
+    deleteFolder(id: number) {
+        return this.http.delete<any>(`/api/folders/${id}`);
     }
 
     getSettings(): Observable<any> {
