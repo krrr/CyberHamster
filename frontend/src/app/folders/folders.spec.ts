@@ -94,7 +94,17 @@ describe('Folders', () => {
 
         component.handleOk();
 
-        expect(apiServiceSpy.createFolder).toHaveBeenCalledWith(component.folderForm());
+        expect(apiServiceSpy.createFolder).toHaveBeenCalledWith({
+            folder: {
+                name: 'New Folder',
+                watch_folder: '/new/path',
+                status: 'active',
+                scan_interval: 60,
+                real_time_watch: true,
+                filename_regex: ''
+            },
+            task_ids: [1]
+        });
         expect(messageServiceSpy.success).toHaveBeenCalledWith('Folder created');
         expect(component.isModalVisible()).toBe(false);
     });
@@ -103,7 +113,17 @@ describe('Folders', () => {
         component.showModal(mockFolders[0]);
         component.handleOk();
 
-        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(1, component.folderForm());
+        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(1, {
+            folder: {
+                name: 'Folder 1',
+                watch_folder: '/path1',
+                status: 'active',
+                scan_interval: 60,
+                real_time_watch: true,
+                filename_regex: ''
+            },
+            task_ids: [1]
+        });
         expect(messageServiceSpy.success).toHaveBeenCalledWith('Folder updated');
         expect(component.isModalVisible()).toBe(false);
     });
@@ -134,11 +154,31 @@ describe('Folders', () => {
 
     it('should toggle folder status', () => {
         component.toggleFolderStatus(mockFolders[0]); // active -> paused
-        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(1, { status: 'paused' });
+        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(1, {
+            folder: {
+                name: 'Folder 1',
+                watch_folder: '/path1',
+                status: 'paused',
+                scan_interval: 60,
+                real_time_watch: true,
+                filename_regex: undefined
+            },
+            task_ids: [1]
+        });
         expect(messageServiceSpy.success).toHaveBeenCalledWith('Folder paused');
 
         component.toggleFolderStatus(mockFolders[1]); // paused -> active
-        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(2, { status: 'active' });
+        expect(apiServiceSpy.updateFolder).toHaveBeenCalledWith(2, {
+            folder: {
+                name: 'Folder 2',
+                watch_folder: '/path2',
+                status: 'active',
+                scan_interval: 120,
+                real_time_watch: false,
+                filename_regex: undefined
+            },
+            task_ids: [2]
+        });
         expect(messageServiceSpy.success).toHaveBeenCalledWith('Folder resumed');
     });
 });
