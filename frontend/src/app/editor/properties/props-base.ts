@@ -1,4 +1,4 @@
-import { Directive, inject, Input, signal } from "@angular/core";
+import { Directive, SimpleChanges, inject, Input, signal } from "@angular/core";
 import { EditorService } from "../editor.service";
 
 
@@ -8,7 +8,7 @@ export abstract class PropsBase {
     config = signal<any>({});
     editorService = inject(EditorService);
 
-    ngOnChanges(): void {
+    ngOnChanges(changes: SimpleChanges): void {
         this.config.set(this.editorService.getNodeConfig(this.nodeId));
     }
 
