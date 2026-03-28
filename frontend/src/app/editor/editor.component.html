@@ -27,22 +27,24 @@
 
         <div class="property-editor" *ngIf="selectedNode() && isPropertyPanelVisible()">
             <div class="title-area">
+                <div class="title">Node Properties</div>
                 <button nz-button nzType="text" (click)="isPropertyPanelVisible.set(false)" class="close-btn"
                     aria-label="Close Properties Panel" title="Close Properties Panel">
                     <span nz-icon nzType="close"></span>
                 </button>
-                <div class="title">Node Properties</div>
             </div>
 
             <div class="props-area">
                 <div class="ant-form">
                     <nz-form-item>
-                        <nz-form-label>Type</nz-form-label>
-                        <nz-form-control><span nz-icon [nzType]="getNodeIcon(selectedNode().type)"></span> {{
-                            selectedNode().type }}</nz-form-control>
+                        <nz-form-label [nzSpan]="4" nzLabelAlign="left" >Type</nz-form-label>
+                        <nz-form-control>
+                            {{ selectedNode().type }}
+                            <span nz-icon [nzType]="getNodeIcon(selectedNode().type)"></span>
+                        </nz-form-control>
                     </nz-form-item>
                     <nz-form-item>
-                        <nz-form-label>Name</nz-form-label>
+                        <nz-form-label [nzSpan]="4" nzLabelAlign="left" >Name</nz-form-label>
                         <nz-form-control>
                             <input nz-input [ngModel]="selectedNode().label"
                                 (ngModelChange)="updateNodeName(selectedNode().id, $event)" name="nodeName"
@@ -51,7 +53,9 @@
                     </nz-form-item>
                 </div>
 
-                <h4>Configuration</h4>
+                <nz-divider [style.margin]="'12px 0'"/>
+
+                <div class="divider-title">Configuration</div>
                 <div [ngSwitch]="selectedNode().type" class="ant-form">
                     <app-read-input-props *ngSwitchCase="'MetadataReadNode'" [nodeId]="selectedNode().id" />
                     <app-convert-props *ngSwitchCase="'ConvertNode'" [nodeId]="selectedNode().id" />

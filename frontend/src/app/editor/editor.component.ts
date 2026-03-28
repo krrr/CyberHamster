@@ -32,6 +32,7 @@ import { PropsFFmpegActionComponent } from './properties/props-ffmpeg-action.com
 import { EditorService, NODE_INFO, TaskConnection, TaskNode } from './editor.service';
 import { FileDialogComponent } from '../components/file-dialog/file-dialog.component';
 import { PropsFinishComponent } from './properties/props-finish.component';
+import { NzDividerComponent } from "ng-zorro-antd/divider";
 
 type Schemes = GetSchemes<TaskNode, TaskConnection<TaskNode>>;
 type AreaExtra = AngularArea2D<Schemes>;
@@ -40,27 +41,28 @@ type AreaExtra = AngularArea2D<Schemes>;
     selector: 'app-editor',
     standalone: true,
     imports: [
-        CommonModule,
-        FormsModule,
-        NzButtonModule,
-        NzDropdownModule,
-        NzMenuModule,
-        NzModalModule,
-        NzFormModule,
-        NzInputModule,
-        NzSelectModule,
-        NzCheckboxModule,
-        ...COMMON_IMPORTS,
-        PropsMetadataReadComponent,
-        PropsConvertComponent,
-        PropsCodeEvalComponent,
-        PropsConditionComponent,
-        PropsFileOperationComponent,
-        PropsMetadataWriteComponent,
-        PropsFFmpegActionComponent,
-        PropsFinishComponent,
-        FileDialogComponent,
-    ],
+    CommonModule,
+    FormsModule,
+    NzButtonModule,
+    NzDropdownModule,
+    NzMenuModule,
+    NzModalModule,
+    NzFormModule,
+    NzInputModule,
+    NzSelectModule,
+    NzCheckboxModule,
+    ...COMMON_IMPORTS,
+    PropsMetadataReadComponent,
+    PropsConvertComponent,
+    PropsCodeEvalComponent,
+    PropsConditionComponent,
+    PropsFileOperationComponent,
+    PropsMetadataWriteComponent,
+    PropsFFmpegActionComponent,
+    PropsFinishComponent,
+    FileDialogComponent,
+    NzDividerComponent
+],
     providers: [EditorService],
     templateUrl: './editor.component.html',
     styleUrls: ['./editor.component.scss'],

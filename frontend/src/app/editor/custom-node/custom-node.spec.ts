@@ -44,7 +44,7 @@ describe('CustomNodeComponent', () => {
         component.data = new TaskNode('MetadataReadNode', 'test');
         component.emit = () => {};
         component.rendered = () => {};
-        await fixture.whenStable();
+        fixture.detectChanges();
     });
 
     it('should create', () => {

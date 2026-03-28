@@ -29,7 +29,7 @@ describe('FileDialogComponent', () => {
 
         fixture = TestBed.createComponent(FileDialogComponent);
         component = fixture.componentInstance;
-        await fixture.whenStable();
+        fixture.detectChanges();
     });
 
     it('should create', () => {
