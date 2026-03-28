@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -31,7 +33,8 @@ describe('Folders', () => {
             getTasks: vi.fn().mockReturnValue(of(mockTasks)),
             createFolder: vi.fn().mockReturnValue(of({})),
             updateFolder: vi.fn().mockReturnValue(of({})),
-            deleteFolder: vi.fn().mockReturnValue(of({}))
+            deleteFolder: vi.fn().mockReturnValue(of({})),
+            listDirectory: vi.fn().mockReturnValue(of([]))
         };
 
         messageServiceSpy = {
@@ -40,10 +43,11 @@ describe('Folders', () => {
         };
 
         await TestBed.configureTestingModule({
-            imports: [FoldersComponent],
+            imports: [FoldersComponent, NoopAnimationsModule],
             providers: [
                 provideHttpClient(),
                 provideHttpClientTesting(),
+                provideRouter([]),
                 { provide: ApiService, useValue: apiServiceSpy },
                 { provide: NzMessageService, useValue: messageServiceSpy }
             ],
@@ -51,7 +55,7 @@ describe('Folders', () => {
 
         fixture = TestBed.createComponent(FoldersComponent);
         component = fixture.componentInstance;
-        await fixture.whenStable();
+        fixture.detectChanges();
     });
 
     it('should create', () => {
