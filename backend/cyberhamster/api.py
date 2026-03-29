@@ -2,7 +2,6 @@ import os
 import sys
 import ctypes
 import asyncio
-import winreg
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import selectinload, defer
 from sqlmodel import Session, select
@@ -30,6 +29,7 @@ def get_app_info():
     return AppInfo(version=__version__, is_packaged=is_packaged())
 
 def update_autostart_registry(enable: bool):
+    import winreg
     try:
         key = winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
