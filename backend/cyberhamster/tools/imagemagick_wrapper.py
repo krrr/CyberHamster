@@ -14,7 +14,7 @@ from ..db import engine
 from ..models import SystemSettings
 
 # A thread pool only for pipe readers
-_magick_executor = ThreadPoolExecutor(max_workers=64, thread_name_prefix="Magick")
+_magick_executor = ThreadPoolExecutor(max_workers=8, thread_name_prefix="Magick")
 
 class MagickProcess:
     def __init__(self, executable_path: str):
@@ -123,7 +123,7 @@ class MagickProcess:
                     pass
 
 class MagickPool:
-    def __init__(self, max_size: int = 4, idle_timeout: int = 300):
+    def __init__(self, max_size: int = 4, idle_timeout: int = 60):
         self.max_size = max_size # This is now a default/fallback
         self.idle_timeout = idle_timeout
         self.pool: queue.Queue = queue.Queue()
@@ -222,7 +222,7 @@ class MagickPool:
 
 
 # Global pool instance
-_magick_pool = MagickPool(max_size=4, idle_timeout=300)
+_magick_pool = MagickPool(max_size=4, idle_timeout=60)
 
 
 class ImageMagickWrapper:
