@@ -5,7 +5,8 @@
     </div>
 
     <div class="task-list" *ngIf="tasks().length > 0">
-        <nz-card *ngFor="let task of tasks()" nzHoverable (click)="openEditor(task.id)" class="task-card">
+        <nz-card *ngFor="let task of tasks()" nzHoverable (click)="openEditor(task.id)" class="task-card"
+            tabindex="0" role="button" [attr.aria-label]="'Open task editor for ' + task.name" (keydown.enter)="openEditor(task.id)" (keydown.space)="openEditor(task.id); $event.preventDefault()">
             <div class="card-header">
                 <div style="display: flex; align-items: center; gap: 12px">
                     <div class="task-icon">{{ task.icon || '🐹' }}</div>
