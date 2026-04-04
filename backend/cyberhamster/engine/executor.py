@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple, Optional
 from .context import FileContext
 from .nodes import NODE_TYPES, StartNode, FinishNode
 from ..logger import logger
@@ -92,8 +92,18 @@ class TaskExecutor:
         :param file_path: Path to the original file.
         :return: True if execution finished successfully (reached end or explicitly stopped gracefully).
         """
+        success, _, _ = self.execute_with_output(file_path)
+        return success
+
+    def execute_with_output(self, file_path: str, initial_inputs: Dict[str, Any] = None, context: FileContext = None) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+        """
+        Execute the DAG for a given file and return the final output.
+        """
         logger.info(f"Starting DAG execution for file: {file_path}")
-        context = FileContext(original_file_path=file_path)
+        owns_context = False
+        if context is None:
+            context = FileContext(original_file_path=file_path)
+            owns_context = True
         current_node_id = self.start_node_id
         
         if not current_node_id:
@@ -123,7 +133,10 @@ class TaskExecutor:
                 logger.info(f"--- Executing node: {current_node.name} (ID: {current_node_id}) ---")
                 
                 # Build inputs
-                node_inputs = self._build_inputs_for_node(current_node_id, context)
+                node_inputs = {}
+                if initial_inputs:
+                    node_inputs.update(initial_inputs)
+                node_inputs.update(self._build_inputs_for_node(current_node_id, context))
                 if current_node_id == self.start_node_id:
                     node_inputs["file"] = initial_file_obj
 
@@ -135,21 +148,24 @@ class TaskExecutor:
                 if not success:
                     logger.warning(f"DAG execution halted at node: {current_node.name} (ID: {current_node_id})")
                     # Could handle specific failure logic or fallback branches here
-                    return False
+                    return False, None, {}
 
                 if isinstance(current_node, FinishNode):
-                    current_node_id = None
+                    logger.info(f"Successfully completed DAG execution for file: {file_path}")
+                    return True, next_branch, output_data
+
                 # Determine next node based on branch
-                elif next_branch and current_node_id in self.edges and next_branch in self.edges[current_node_id]:
+                if next_branch and current_node_id in self.edges and next_branch in self.edges[current_node_id]:
                     current_node_id = self.edges[current_node_id][next_branch]
                 else:
                     # No outgoing edge for this branch, but not FinishNode
                     raise Exception(f"No outgoing edge for branch '{next_branch}' from node {current_node_id}")
 
             logger.info(f"Successfully completed DAG execution for file: {file_path}")
-            return True
+            return True, None, {}
         except Exception as e:
             logger.exception(f"Unexpected error during DAG execution for {file_path}: {e}")
-            return False
+            return False, None, {}
         finally:
-            context.cleanup()
+            if owns_context:
+                context.cleanup()
