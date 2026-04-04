@@ -84,9 +84,9 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     isPropertyPanelVisible = signal(true);
 
     private task: any;
-    taskId = signal<number | null>(null);
+    taskId?: number;
     arrange!: AutoArrangePlugin<any>;
-    zoomLevel = signal<string>('100%');
+    zoomLevel = signal<number>(100);
 
     isExecuteModalVisible = signal(false);
     isLogsModalVisible = signal(false);
@@ -122,7 +122,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         this.routeSub = this.route.paramMap.subscribe((params) => {
             const idStr = params.get('taskId');
             if (idStr) {
-                this.taskId.set(+idStr);
+                this.taskId = +idStr;
                 this.loadTask();
             }
         });
@@ -140,7 +140,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
 
     loadTask() {
-        const tid = this.taskId();
+        const tid = this.taskId;
         if (!tid) return;
         this.apiService.getTask(tid).subscribe((task) => {
             this.task = task;
@@ -248,7 +248,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         this.area.addPipe((context) => {
             if (context.type === 'zoomed') {
                 const scale = this.area.area.transform.k;
-                this.zoomLevel.set(Math.round(scale * 100) + '%');
+                this.zoomLevel.set(Math.round(scale * 100));
             } else if (context.type === 'connectioncreated') {
                 this.editorService.autoLinkVariable(context.data);
             }
@@ -430,7 +430,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         this.logs.set([]);
         this.isLogsModalVisible.set(true);
 
-        this.apiService.executeTask(dag, this.executeFilePath(), this.taskId() || undefined).subscribe({
+        this.apiService.executeTask(dag, this.executeFilePath(), this.taskId).subscribe({
             next: (res) => console.log('Execution response:', res),
             error: (err) => {
                 console.error('Execution error:', err);
@@ -444,15 +444,14 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     async saveDag() {
-        const taskId = this.taskId();
-        if (!taskId) {
+        if (!this.taskId) {
             this.message.error('No Task ID associated with this editor');
             return;
         }
 
         const dagJson = this.editorService.serializeDag();
         try {
-            await lastValueFrom(this.apiService.updateTask(taskId, { json_data: dagJson }))
+            await lastValueFrom(this.apiService.updateTask(this.taskId, { json_data: dagJson }))
             this.message.success('Task saved successfully');
         } catch (e: any) {
             this.message.error(e.error.detail);
