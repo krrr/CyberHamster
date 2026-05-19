@@ -89,10 +89,14 @@ import { ThemeService } from './services/theme.service';
                     display: none;
                 }
                 .collapse-trigger {
+                    margin-right: 2px;
+                }
+                .collapse-trigger nz-icon {
                     opacity: 0.2;
                     margin-right: 0;
+                    transition: opacity 0.3s;
                 }
-                .collapse-trigger:hover {
+                .collapse-trigger:hover nz-icon {
                     opacity: 0.8;
                 }
             }
@@ -111,6 +115,9 @@ import { ThemeService } from './services/theme.service';
 
             .collapse-trigger {
                 margin-right: 6px;
+                nz-icon {
+                    opacity: 0.7;
+                }
             }
         }
         .inner-content {

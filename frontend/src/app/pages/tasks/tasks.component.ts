@@ -15,6 +15,7 @@ import { NzTagComponent } from 'ng-zorro-antd/tag';
 import { EmojiPickerComponent } from '../../components/emoji-picker/emoji-picker.component';
 import { NzPopoverModule } from 'ng-zorro-antd/popover';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { TranslocoService } from '@jsverse/transloco';
 
 @Component({
@@ -27,6 +28,7 @@ import { TranslocoService } from '@jsverse/transloco';
         NzFormModule,
         NzInputModule,
         NzIconModule,
+        NzSpinModule,
         NzGridModule,
         NzDropdownModule,
         ...COMMON_IMPORTS,
@@ -39,7 +41,7 @@ import { TranslocoService } from '@jsverse/transloco';
     styleUrls: ['./tasks.component.scss'],
 })
 export class TasksComponent implements OnInit {
-    tasks = signal<any[]>([]);
+    tasks = signal<any[] | null>(null);
 
     isModalVisible = signal(false);
     isEditing = signal(false);

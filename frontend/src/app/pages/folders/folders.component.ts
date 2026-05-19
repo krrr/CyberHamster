@@ -15,6 +15,7 @@ import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { COMMON_IMPORTS } from '../../shared-imports';
 import { FileDialogComponent } from '../../components/file-dialog/file-dialog.component';
 import { Folder, FolderForm, createDefaultFolderForm } from '../../interfaces/folder.interface';
@@ -38,6 +39,7 @@ import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
         NzCheckboxModule,
         NzTabsModule,
         NzEmptyModule,
+        NzSpinModule,
         FileDialogComponent,
         ...COMMON_IMPORTS,
         TranslocoModule,
@@ -53,8 +55,7 @@ export class FoldersComponent implements OnInit {
 
     private refreshFolders$ = new BehaviorSubject<void>(undefined);
     folders = toSignal(
-        this.refreshFolders$.pipe(switchMap(() => this.apiService.getFolders())),
-        { initialValue: [] as Folder[] }
+        this.refreshFolders$.pipe(switchMap(() => this.apiService.getFolders()))
     );
     tasks = toSignal(this.apiService.getTasks(), { initialValue: [] as Task[] });
     taskMap = computed(() => new Map(this.tasks().map((task) => [task.id, task])));
