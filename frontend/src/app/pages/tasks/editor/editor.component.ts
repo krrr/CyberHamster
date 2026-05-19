@@ -100,7 +100,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     }
 
     async ngOnInit() {
-        this.bgPattern.set(this.apiService.appInfo()?.settings.editor_bg || 'none');
+        this.apiService.getAppInfo().then(info => this.bgPattern.set(info.settings.editor_bg));
         this.routeSub = this.route.paramMap.subscribe((params) => {
             const idStr = params.get('taskId');
             if (idStr) {

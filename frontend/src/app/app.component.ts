@@ -139,8 +139,8 @@ export class AppComponent implements OnInit {
     ngOnInit() {
         this.langService.init();
         this.themeService.loadTheme(true);
-        this.apiService.refreshAppInfo().then(() => {
-            const settings = this.apiService.appInfo()?.settings;
+        this.apiService.getAppInfo().then((info) => {
+            const settings = info.settings;
             if (settings?.theme) {
                 this.themeService.setTheme(settings.theme, true);
             }

@@ -20,11 +20,26 @@ describe('Settings', () => {
                 ffmpeg_path: '/usr/bin/ffmpeg',
                 imagemagick_path: '/usr/bin/magick'
             })),
-            appInfo: vi.fn().mockReturnValue({
-                is_packaged: false
+            getAppInfo: vi.fn().mockResolvedValue({
+                is_packaged: false,
+                version: '1.0.0',
+                settings: {
+                    ffmpeg_path: '/usr/bin/ffmpeg',
+                    imagemagick_path: '/usr/bin/magick',
+                    host: '127.0.0.1'
+                }
             }),
-            updateSettings: vi.fn().mockReturnValue(of({})),
-            refreshAppInfo: vi.fn()
+            appInfoSignal: vi.fn().mockReturnValue({
+                is_packaged: false,
+                version: '1.0.0'
+            }),
+            updateSettings: vi.fn().mockReturnValue(of({
+                ffmpeg_path: '/usr/bin/ffmpeg',
+                imagemagick_path: '/usr/bin/magick',
+                language: 'en',
+                theme: 'light',
+                host: null
+            }))
         };
 
 
@@ -48,7 +63,7 @@ describe('Settings', () => {
     });
 
     it('should load settings on init', () => {
-        expect(apiServiceSpy.getSettings).toHaveBeenCalled();
+        expect(apiServiceSpy.getAppInfo).toHaveBeenCalled();
         expect(component.settings()).toEqual(expect.objectContaining({
             ffmpeg_path: '/usr/bin/ffmpeg',
             imagemagick_path: '/usr/bin/magick',
@@ -56,15 +71,16 @@ describe('Settings', () => {
         }));
     });
 
-    it('should save settings', () => {
+    it('should save settings', async () => {
         component.saveSettings();
+        fixture.detectChanges();
         expect(apiServiceSpy.updateSettings).toHaveBeenCalledWith(expect.objectContaining({
             ffmpeg_path: '/usr/bin/ffmpeg',
             imagemagick_path: '/usr/bin/magick',
             host: null
         }));
         expect(messageServiceSpy.success).toHaveBeenCalledWith('Settings saved successfully!');
-        expect(apiServiceSpy.refreshAppInfo).toHaveBeenCalled();
+        expect(apiServiceSpy.getAppInfo).toHaveBeenCalled();
     });
 
     it('should update field', () => {

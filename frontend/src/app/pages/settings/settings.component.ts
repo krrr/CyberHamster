@@ -39,8 +39,7 @@ import { SystemConfig } from '../../interfaces/app-info.interface';
     styleUrls: ['./settings.component.scss'],
 })
 export class SettingsComponent implements OnInit {
-    settings = signal({
-    } as SystemConfig);
+    settings = signal({ } as SystemConfig);
     allowRemoteAccess = signal(false);
     
     langService = inject(LanguageService);
@@ -56,11 +55,9 @@ export class SettingsComponent implements OnInit {
         this.loadSettings();
     }
 
-    loadSettings() {
-        const info = this.apiService.appInfo();
-        if (info) {
-            this.applySettings(info.settings);
-        }
+    async loadSettings() {
+        const info = await this.apiService.getAppInfo();
+        this.applySettings(info.settings);
     }
 
     applySettings(s: SystemConfig) {
@@ -87,9 +84,8 @@ export class SettingsComponent implements OnInit {
             this.themeService.setTheme(updated.theme as any, true);
             this.langService.setLanguage(updated.language);
             
-            this.apiService.appInfo.update((info) => {
-                if (!info) return info;
-                return { ...info, settings: updated };
+            this.apiService.getAppInfo().then(info => {
+                info.settings = updated;
             });
             this.applySettings(updated);
 

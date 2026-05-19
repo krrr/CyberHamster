@@ -1,5 +1,5 @@
 <div class="settings-container" #scrollContainer *transloco="let t">
-    <h2>{{ t('menu.settings') }} <small style="font-weight: normal; font-size: 0.6em; color: #888;">v{{apiService.appInfo()?.version}}</small></h2>
+    <h2>{{ t('menu.settings') }} <small style="font-weight: normal; font-size: 0.6em; color: #888;">v{{apiService.appInfoSignal()?.version}}</small></h2>
     
     <div class="flex-box-h">
         <div class="ant-form" style="flex: 1; max-width: 800px;">
@@ -83,7 +83,7 @@
                 </nz-form-control>
             </nz-form-item>
 
-            @if (apiService.appInfo()?.is_packaged) {
+            @if (apiService.appInfoSignal()?.is_packaged) {
                 <nz-form-item>
                     <nz-form-label [nzSpan]="6" nzLabelAlign="left">{{ t('settings.auto_start') }}</nz-form-label>
                     <nz-form-control [nzSpan]="18">

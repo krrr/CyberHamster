@@ -12,12 +12,17 @@ export class ApiService {
     private socket: WebSocket | null = null;
     public logs$ = new Subject<any>();
     private http = inject(HttpClient);
-    public appInfo = signal<AppInfo | undefined>(undefined);
+    public appInfoSignal = signal<AppInfo | undefined>(undefined);  // for use in component template
+    private appInfoCache: AppInfo | null = null;
 
     constructor() {}
 
-    async refreshAppInfo() {
-        this.appInfo.set(await lastValueFrom(this.getAppInfo()));
+    async getAppInfo(force = false) {
+        if (!this.appInfoCache || force) {
+            this.appInfoCache = await lastValueFrom(this.getAppInfoInternal());
+            this.appInfoSignal.set(this.appInfoCache);
+        }
+        return this.appInfoCache;
     }
 
     executeTask(task: any, filePath: string, taskId?: number) {
@@ -81,7 +86,7 @@ export class ApiService {
         return this.http.get<any>('/api/settings');
     }
 
-    getAppInfo() {
+    private getAppInfoInternal() {
         return this.http.get<AppInfo>('/api/info');
     }
 
