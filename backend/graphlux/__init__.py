@@ -16,6 +16,6 @@ def get_server_config():
             return "127.0.0.1", DEFAULT_PORT
 
         # Use settings host if set, otherwise default to 127.0.0.1
-        host = settings.host if settings.host else "127.0.0.1"
-        port = settings.port
+        host = settings.get_value('host') or "127.0.0.1"
+        port = settings.get_value('port')
         return host, port

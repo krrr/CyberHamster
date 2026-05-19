@@ -49,8 +49,7 @@
     "port": "端口",
     "remote_access_warning": "警告：允许外部访问会带来任意文件读写和任意代码执行的安全风险！",
     "save": "保存",
-    "saved": "设置保存成功！",
-    "local_storage_hint": "语言和主题设置保存在浏览器的本地存储中。"
+    "saved": "设置保存成功！"
   },
   "tasks": {
     "title": "任务",

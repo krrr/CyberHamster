@@ -50,7 +50,9 @@ class AppInfo(BaseModel):
 @router.get("/info", response_model=AppInfo)
 def get_app_info(session: Session = Depends(get_session)):
     settings = session.get(SystemSettings, 1)
-    return AppInfo(version=__version__, is_packaged=is_packaged(), settings=settings.to_dict() if settings else {})
+    if not settings:
+        settings = SystemSettings(id=1)
+    return AppInfo(version=__version__, is_packaged=is_packaged(), settings=settings.to_dict())
 
 def update_autostart_registry(enable: bool):
     import winreg
@@ -357,9 +359,6 @@ def get_settings(session: Session = Depends(get_session)):
     settings = session.get(SystemSettings, 1)
     if not settings:
         settings = SystemSettings(id=1)
-        session.add(settings)
-        session.commit()
-        session.refresh(settings)
     return settings.to_dict()
 
 @router.put("/settings", response_model=SettingsResponse)
@@ -371,11 +370,11 @@ def update_settings(settings_update: SettingsConfig, session: Session = Depends(
     update_data = settings_update.model_dump(exclude_unset=True)
     
     # Check if auto_start changed
-    if is_packaged() and "auto_start" in update_data and update_data["auto_start"] != settings.auto_start:
+    if is_packaged() and "auto_start" in update_data and update_data["auto_start"] != settings.get_value('auto_start'):
         update_autostart_registry(update_data["auto_start"])
 
     for key, value in update_data.items():
-        setattr(settings, key, value)
+        settings.update_value(key, value)
 
     session.add(settings)
     session.commit()

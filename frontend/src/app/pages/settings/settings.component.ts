@@ -1,4 +1,6 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, untracked } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { filter, take } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../api.service';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -55,32 +57,43 @@ export class SettingsComponent implements OnInit {
     }
 
     loadSettings() {
-        this.apiService.getSettings().subscribe((s) => {
-            this.settings.set(s);
-            
-            if (s.host && s.host !== LOCALHOST) {
-                this.allowRemoteAccess.set(true);
-            } else {
-                this.allowRemoteAccess.set(false);
-                s.host = LOCALHOST;
-            }
-        });
+        const info = this.apiService.appInfo();
+        if (info) {
+            this.applySettings(info.settings);
+        }
+    }
+
+    applySettings(s: SystemConfig) {
+        let settings = { ...s };
+
+        if (settings.host && settings.host !== LOCALHOST) {
+            this.allowRemoteAccess.set(true);
+        } else {
+            this.allowRemoteAccess.set(false);
+            settings.host = LOCALHOST;
+        }
+        this.settings.set(settings);
     }
 
     saveSettings() {
         const oldLang = this.langService.currentLang;
-        let settings = this.settings();
+        let settings = { ...this.settings() };
         if (settings.host == LOCALHOST) {
             settings.host = null;
         }
 
-        this.apiService.updateSettings(settings).subscribe(() => {
+        this.apiService.updateSettings(settings).subscribe((updated) => {
             this.message.success(this.translocoService.translate('settings.saved'));
-            this.themeService.setTheme(this.settings().theme as any, true);
-            this.langService.setLanguage(this.settings().language);
-            this.apiService.refreshAppInfo();
+            this.themeService.setTheme(updated.theme as any, true);
+            this.langService.setLanguage(updated.language);
+            
+            this.apiService.appInfo.update((info) => {
+                if (!info) return info;
+                return { ...info, settings: updated };
+            });
+            this.applySettings(updated);
 
-            if (oldLang !== this.settings().language) {
+            if (oldLang !== updated.language) {
                 window.location.reload();
             }
         });

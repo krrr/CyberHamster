@@ -14,8 +14,8 @@ class FFmpegWrapper:
         try:
             with Session(engine) as session:
                 settings = session.get(SystemSettings, 1)
-                if settings and settings.ffmpeg_path:
-                    ffmpeg_cmd = settings.ffmpeg_path
+                if settings and settings.get_value('ffmpeg_path'):
+                    ffmpeg_cmd = settings.get_value('ffmpeg_path')
         except Exception as e:
             logger.warning(f"Could not load ffmpeg path from DB: {e}")
 

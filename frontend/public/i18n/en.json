@@ -50,8 +50,7 @@
     "port": "Port",
     "remote_access_warning": "Warning: Allowing external access poses security risks of arbitrary file read/write and arbitrary code execution!",
     "save": "Save",
-    "saved": "Settings saved successfully!",
-    "local_storage_hint": "Language and theme settings are saved in your browser's local storage."
+    "saved": "Settings saved successfully!"
   },
   "tasks": {
     "title": "Tasks",

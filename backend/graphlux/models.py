@@ -81,80 +81,11 @@ class SystemSettings(SQLModel, table=True):
     def _get_config(self) -> SettingsConfig:
         return SettingsConfig(**(self.value or {}))
 
-    def _update_value(self, key: str, val: Any):
+    def get_value(self, key: str, default: Any = None) -> Any:
+        return getattr(self._get_config(), key, default)
+
+    def update_value(self, key: str, val: Any):
         """Update value dict and ensure SQLAlchemy detects the change."""
         new_value = dict(self.value or {})
         new_value[key] = val
         self.value = new_value
-
-    @property
-    def ffmpeg_path(self) -> str:
-        return self._get_config().ffmpeg_path
-
-    @ffmpeg_path.setter
-    def ffmpeg_path(self, val: str):
-        self._update_value("ffmpeg_path", val)
-
-    @property
-    def imagemagick_path(self) -> str:
-        return self._get_config().imagemagick_path
-
-    @imagemagick_path.setter
-    def imagemagick_path(self, val: str):
-        self._update_value("imagemagick_path", val)
-
-    @property
-    def max_concurrent_tasks(self) -> int:
-        return self._get_config().max_concurrent_tasks
-
-    @max_concurrent_tasks.setter
-    def max_concurrent_tasks(self, val: int):
-        self._update_value("max_concurrent_tasks", val)
-
-    @property
-    def auto_start(self) -> bool:
-        return self._get_config().auto_start
-
-    @auto_start.setter
-    def auto_start(self, val: bool):
-        self._update_value("auto_start", val)
-
-    @property
-    def theme(self) -> str:
-        return self._get_config().theme
-
-    @theme.setter
-    def theme(self, val: str):
-        self._update_value("theme", val)
-
-    @property
-    def language(self) -> str:
-        return self._get_config().language
-
-    @language.setter
-    def language(self, val: str):
-        self._update_value("language", val)
-
-    @property
-    def host(self) -> Optional[str]:
-        return self._get_config().host
-
-    @host.setter
-    def host(self, val: Optional[str]):
-        self._update_value("host", val)
-
-    @property
-    def port(self) -> int:
-        return self._get_config().port
-
-    @port.setter
-    def port(self, val: int):
-        self._update_value("port", val)
-
-    @property
-    def editor_bg(self) -> str:
-        return self._get_config().editor_bg
-
-    @editor_bg.setter
-    def editor_bg(self, val: str):
-        self._update_value("editor_bg", val)

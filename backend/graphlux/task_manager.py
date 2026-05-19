@@ -116,7 +116,7 @@ class TaskManager:
             with Session(engine) as session:
                 settings = session.get(SystemSettings, 1)
                 if settings:
-                    return settings.max_concurrent_tasks
+                    return settings.get_value('max_concurrent_tasks')
         except Exception as e:
             logger.warning(f"Could not load max_concurrent_tasks from DB: {e}")
         return 4
