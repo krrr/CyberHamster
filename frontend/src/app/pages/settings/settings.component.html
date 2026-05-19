@@ -1,7 +1,10 @@
 <div class="page-container" #scrollContainer *transloco="let t">
     <div class="header-div">
         <h2>{{ t('menu.settings') }}</h2>
-        <small class="sub-txt">v{{apiService.appInfoSignal()?.version}}</small>
+        <small class="sub-txt"><a href="https://github.com/krrr/Graphlux" target="_blank">v{{apiService.appInfoSignal()?.version}}</a></small>
+        <small class="sub-txt">
+            <a href="https://blog.hazama.cc" target="_blank"><nz-icon nzType="copyright" [style.font-size.px]="10"/>krrr</a>
+        </small>
     </div>
     
     <div class="flex-box-h">
@@ -124,9 +127,8 @@
                 </nz-form-control>
             </nz-form-item>
 
-            <button nz-button nzType="primary" (click)="saveSettings()" style="margin-top: 24px">
-                <nz-icon nzType="save" />{{ t('settings.save') }}
-            </button>
+            <nz-float-button nzType="primary" style="right: 48px" nzIcon="save"
+                [title]="t('settings.save')" (click)="saveSettings()" />
         </div>
         <nz-anchor [nzContainer]="scrollContainer" [nzOffsetTop]="20" class="anchor">
             <nz-link nzHref="#interface" [nzTitle]="t('settings.interface')"></nz-link>

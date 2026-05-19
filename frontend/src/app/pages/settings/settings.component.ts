@@ -16,23 +16,25 @@ import { NzDividerComponent } from "ng-zorro-antd/divider";
 import { NzAnchorModule } from 'ng-zorro-antd/anchor';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { SystemConfig } from '../../interfaces/app-info.interface';
+import { NzFloatButtonModule } from 'ng-zorro-antd/float-button';
 
 
 @Component({
     selector: 'app-settings',
     standalone: true,
     imports: [
-    FormsModule,
-    NzFormModule,
-    NzInputModule,
-    NzInputNumberModule,
-    NzSelectModule,
-    NzSwitchModule,
-    NzAlertModule,
-    NzAnchorModule,
-    NzGridModule,
-    ...COMMON_IMPORTS,
-    NzDividerComponent
+        FormsModule,
+        NzFormModule,
+        NzInputModule,
+        NzInputNumberModule,
+        NzSelectModule,
+        NzSwitchModule,
+        NzAlertModule,
+        NzAnchorModule,
+        NzGridModule,
+        NzFloatButtonModule,
+        ...COMMON_IMPORTS,
+        NzDividerComponent
 ],
     templateUrl: './settings.component.html',
     styleUrls: ['./settings.component.scss'],
