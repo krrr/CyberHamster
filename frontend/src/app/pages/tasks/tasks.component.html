@@ -1,6 +1,7 @@
-<div class="tasks-container" *transloco="let t">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px">
+<div class="page-container" *transloco="let t">
+    <div class="header-div">
         <h2>{{ t('tasks.title') }}</h2>
+        <div class="flex1"></div>
         <button nz-button nzType="primary" (click)='showModal()'><nz-icon nzType="plus"/> {{ t('tasks.create') }}</button>
     </div>
 

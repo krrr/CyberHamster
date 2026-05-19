@@ -71,3 +71,18 @@
 .flex-box-h {
     display: flex;
 }
+
+.page-container {
+    padding: 20px;
+    height: 100%;
+
+    .header-div {
+        display: flex;
+        user-select: none;
+        align-items: center;
+        margin-bottom: 20px;
+        h2 {
+            margin: 0;
+        }
+    }
+}

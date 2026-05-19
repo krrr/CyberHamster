@@ -1,5 +1,5 @@
-<div class="history-container" *transloco="let t">
-    <div class="header">
+<div class="page-container" *transloco="let t">
+    <div class="header-div">
         <div class="title-group">
             <h2>{{ t('history.title') }}</h2>
             <nz-radio-group [ngModel]="viewMode()" (ngModelChange)="viewMode.set($event); onViewModeChange($event)" nzButtonStyle="solid">
@@ -7,6 +7,8 @@
                 <label nz-radio-button nzValue="logs"><nz-icon nzType="exception" /> {{ t('history.tab_logs') }}</label>
             </nz-radio-group>
         </div>
+
+        <div class="flex1"></div>
 
         @if (viewMode() === 'history') {
         <div class="filters">

@@ -1,6 +1,4 @@
 import { Component, OnInit, signal, inject, untracked } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { filter, take } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../api.service';
 import { NzFormModule } from 'ng-zorro-antd/form';
@@ -18,6 +16,7 @@ import { NzDividerComponent } from "ng-zorro-antd/divider";
 import { NzAnchorModule } from 'ng-zorro-antd/anchor';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { SystemConfig } from '../../interfaces/app-info.interface';
+
 
 @Component({
     selector: 'app-settings',
@@ -42,14 +41,12 @@ export class SettingsComponent implements OnInit {
     settings = signal({ } as SystemConfig);
     allowRemoteAccess = signal(false);
     
+    private message = inject(NzMessageService);
+    apiService = inject(ApiService);
     langService = inject(LanguageService);
     themeService = inject(ThemeService);
     translocoService = inject(TranslocoService);
 
-    constructor(
-        public apiService: ApiService,
-        private message: NzMessageService,
-    ) {}
 
     ngOnInit() {
         this.loadSettings();

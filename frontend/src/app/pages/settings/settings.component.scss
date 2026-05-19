@@ -1,7 +1,13 @@
-.settings-container {
-    padding: 20px;
+.page-container {
     overflow-y: auto;
-    height: 100%;
+}
+
+.sub-txt {
+    font-weight: normal;
+    font-size: 0.9em;
+    color: var(--text-color-secondary);
+    margin-left: 8px;
+    padding-top: 8px;
 }
 
 .ant-form {
