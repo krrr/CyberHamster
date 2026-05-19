@@ -1,13 +1,89 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8" />
     <title>Graphlux</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  </head>
-  <body>
-    <app-root></app-root>
-  </body>
+</head>
+
+<style>
+    @keyframes fakeRotate {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+    @keyframes fakeSpinMove {
+        to {
+            opacity: 1;
+        }
+    }
+    body {
+        margin: 0;
+    }
+    .fake-spin {
+        display: block;
+        margin: 0;
+        padding: 0;
+        position: absolute;
+        top: 50%;
+        width: 100%;
+        color: hsl(260.29, 39%, 55%);
+        text-align: center;
+        box-sizing: border-box;
+    }
+    .fake-spin-dot {
+        position: relative;
+        display: inline-block;
+        font-size: 36px;
+        width: 1em;
+        height: 1em;
+    }
+    .fake-spin-dot-item:nth-child(1) {
+        top: 0;
+        left: 0;
+    }
+    .fake-spin-dot-item:nth-child(2) {
+        top: 0;
+        right: 0;
+        animation-delay: 0.4s;
+    }
+    .fake-spin-dot-item:nth-child(3) {
+        right: 0;
+        bottom: 0;
+        animation-delay: 0.8s;
+    }
+    .fake-spin-dot-item:nth-child(4) {
+        bottom: 0;
+        left: 0;
+        animation-delay: 1.2s;
+    }
+    .fake-spin-dot-spin {
+        transform: rotate(0deg);
+        animation: fakeRotate 1.2s infinite linear;
+    }
+    .fake-spin-dot-item {
+        position: absolute;
+        display: block;
+        width: 16px;
+        height: 16px;
+        background-color: hsl(260.29, 39%, 55%);
+        border-radius: 100%;
+        transform: scale(0.75);
+        transform-origin: 50% 50%;
+        opacity: 0.3;
+        animation: fakeSpinMove 1s infinite linear alternate;
+    }
+</style>
+
+<body>
+    <app-root>
+        <div class="fake-spin">
+            <span class="fake-spin-dot fake-spin-dot-spin"><i class="fake-spin-dot-item"></i><i class="fake-spin-dot-item"></i><i class="fake-spin-dot-item"></i><i class="fake-spin-dot-item"></i></span>
+        </div>
+    </app-root>
+</body>
+
 </html>

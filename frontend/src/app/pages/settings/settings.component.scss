@@ -42,3 +42,12 @@
 :host ::ng-deep .ant-divider-inner-text {
     padding-left: 0;
 }
+
+nz-float-button {
+    height: 48px;
+    width: 48px;
+    ::ng-deep .ant-float-btn-icon {
+        font-size: 19px !important;
+        width: 19px;
+    }
+}
