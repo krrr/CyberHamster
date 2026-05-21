@@ -9,7 +9,7 @@ import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzGridModule } from 'ng-zorro-antd/grid';
-import { NzDropdownModule } from 'ng-zorro-antd/dropdown';
+import { NzContextMenuService, NzDropdownMenuComponent, NzDropdownModule } from 'ng-zorro-antd/dropdown';
 import { COMMON_IMPORTS } from '../../shared-imports';
 import { NzTagComponent } from 'ng-zorro-antd/tag';
 import { EmojiPickerComponent } from '../../components/emoji-picker/emoji-picker.component';
@@ -55,6 +55,7 @@ export class TasksComponent implements OnInit {
         private message: NzMessageService,
         private modal: NzModalService,
         private translocoService: TranslocoService,
+        private nzContextMenuService: NzContextMenuService,
     ) {}
 
     ngOnInit() {
@@ -145,5 +146,9 @@ export class TasksComponent implements OnInit {
 
     updateForm(field: string, value: any) {
         this.taskForm.update((prev) => ({ ...prev, [field]: value }));
+    }
+
+    onContextMenu(event: MouseEvent, menu: NzDropdownMenuComponent) {
+        this.nzContextMenuService.create(event, menu);
     }
 }

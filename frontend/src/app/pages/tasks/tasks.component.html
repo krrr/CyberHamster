@@ -8,13 +8,13 @@
     @if (!!tasks()?.length) {
     <div class="task-list">
         @for (task of tasks(); track task.id) {
-        <nz-card nzHoverable (click)="openEditor(task.id)" class="task-card">
+        <nz-card nzHoverable (click)="openEditor(task.id)" (contextmenu)="onContextMenu($event, menu)" class="task-card">
             <div class="card-header">
                 <div>
                     <div class="task-icon">{{ task.icon }}</div>
                     <div class="task-title">{{ task.name }}</div>
                 </div>
-                <button nz-button nzType="text" nz-dropdown [nzDropdownMenu]="menu" (click)="$event.stopPropagation()" class="more-btn"
+                <button nz-button nzType="text" nz-dropdown [nzDropdownMenu]="menu" nzTrigger="click" (click)="$event.stopPropagation()" class="more-btn"
                     aria-label="More Options" title="More Options">
                     <span nz-icon nzType="more"></span>
                 </button>
