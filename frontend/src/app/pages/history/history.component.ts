@@ -10,6 +10,8 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { NzBadgeModule } from 'ng-zorro-antd/badge';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
+import { NzContextMenuService, NzDropdownMenuComponent, NzDropdownModule } from 'ng-zorro-antd/dropdown';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { TranslocoService } from '@jsverse/transloco';
 import { Task } from '../../interfaces/task.interface';
 import { isEqual } from 'lodash-es';
@@ -31,6 +33,7 @@ import { LogViewerComponent } from '../../components/log-viewer/log-viewer.compo
         NzTooltipModule,
         NzBadgeModule,
         NzModalModule,
+        NzDropdownModule,
         NzSpaceModule,
         NzRadioModule,
         LogViewerComponent,
@@ -43,6 +46,8 @@ export class HistoryComponent implements OnInit {
     apiService = inject(ApiService);
     private modal = inject(NzModalService);
     private translocoService = inject(TranslocoService);
+    private nzContextMenuService = inject(NzContextMenuService);
+    private messageService = inject(NzMessageService);
 
     viewMode = signal<'history' | 'logs'>('history');
 
@@ -65,6 +70,8 @@ export class HistoryComponent implements OnInit {
     ]
     taskFilters = computed<NzTableFilterList>(() => this.tasks().map(t => ({ text: t.name, value: t.id })));
     folderFilters = computed<NzTableFilterList>(() => this.folders().map(f => ({ text: f.name, value: f.id })));
+
+    contextItem = signal<any>(null);
 
     // Log viewer
     logLevel = signal<string | null>(null);
@@ -167,6 +174,22 @@ export class HistoryComponent implements OnInit {
             nzWidth: 900,
             nzFooter: [{label: this.translocoService.translate('common.close'), key: 'close', onClick: () => comp.close()}],
             nzMaskClosable: true
+        });
+    }
+
+    onContextMenu(event: MouseEvent, item: any, menu: NzDropdownMenuComponent) {
+        this.contextItem.set(item);
+        this.nzContextMenuService.create(event, menu);
+    }
+
+    revealFile() {
+        const item = this.contextItem();
+        console.assert(!!item);
+        this.apiService.revealInExplorer(item.output_path || item.input_path).subscribe({
+            next: () => {},
+            error: () => {
+                this.messageService.error(this.translocoService.translate('history.file_not_exist'));
+            }
         });
     }
 }

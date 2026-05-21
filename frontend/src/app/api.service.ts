@@ -74,6 +74,10 @@ export class ApiService {
         return this.http.delete<any>('/api/history');
     }
 
+    revealInExplorer(path: string) {
+        return this.http.post<any>('/api/fs/reveal', { path });
+    }
+
     getLogHistory(): Observable<any[]> {
         return this.http.get<any[]>('/api/logs/history');
     }

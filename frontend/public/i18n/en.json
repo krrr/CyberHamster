@@ -25,7 +25,9 @@
         "clear_confirm": "Are you sure you want to clear the history?",
         "filter_log_level": "Filter by Log Level",
         "level_all": "All Levels",
-        "clear_logs": "Clear Logs"
+        "clear_logs": "Clear Logs",
+        "reveal_file_location": "Open File Location",
+        "file_not_exist": "File does not exist or has been deleted."
     },
 
 

@@ -93,7 +93,7 @@
             </thead>
             <tbody>
                 @for (data of historyTable.data; track $index) {
-                <tr>
+                <tr (contextmenu)="onContextMenu($event, data, contextMenu)">
                     <td>{{ data.start_time + 'Z' | date: 'yyyy-MM-dd HH:mm:ss' }}</td>
                     <td>{{ taskMap().get(data.task_id)?.name }}</td>
                     <td>{{ folderMap().get(data.folder_id)?.name || '-' }}</td>
@@ -128,6 +128,15 @@
                 }
             </tbody>
         </nz-table>
+
+        <nz-dropdown-menu #contextMenu="nzDropdownMenu">
+            <ul nz-menu>
+                <li nz-menu-item (click)="revealFile()">
+                    <nz-icon nzType="folder-open" /> {{ t('history.reveal_file_location') }}
+                </li>
+            </ul>
+        </nz-dropdown-menu>
+
         } @else if (viewMode() === 'logs') {
             <app-log-viewer #logViewer [logLevel]="logLevel()"/>
         }

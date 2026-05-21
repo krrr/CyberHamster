@@ -3,6 +3,7 @@ import sys
 import ctypes
 import asyncio
 import datetime
+import subprocess
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, BackgroundTasks, FastAPI
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
@@ -352,7 +353,28 @@ def list_directory(path: str = None, showHidden: bool = False):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- SystemSettings ---
+class RevealRequest(BaseModel):
+    path: str
+
+@router.post("/fs/reveal")
+def reveal_in_explorer(req: RevealRequest):
+    """Open the system file explorer and select/highlight the specified file."""
+    path = os.path.normpath(req.path)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=400, detail="Path does not exist")
+
+    try:
+        if sys.platform == 'win32':
+            subprocess.Popen(['explorer', '/select,', path])
+        elif sys.platform == 'darwin':
+            subprocess.Popen(['open', '-R', path])
+        else:
+            # Linux: open the parent directory
+            parent = os.path.dirname(path) if os.path.isfile(path) else path
+            subprocess.Popen(['xdg-open', parent])
+        return {"message": "OK"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/settings", response_model=SettingsResponse)
 def get_settings(session: Session = Depends(get_session)):

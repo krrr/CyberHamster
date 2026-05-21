@@ -25,7 +25,9 @@
       "clear_confirm": "确定要清空历史记录吗？",
       "filter_log_level": "按日志级别筛选",
       "level_all": "全部级别",
-      "clear_logs": "清空日志"
+      "clear_logs": "清空日志",
+      "reveal_file_location": "打开文件位置",
+      "file_not_exist": "文件不存在或已被删除。"
   },
 
   "settings": {
