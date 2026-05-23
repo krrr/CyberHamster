@@ -1,6 +1,7 @@
-import { Component, inject, OnInit, signal, effect } from '@angular/core';
+import { Component, inject, OnInit, signal, effect, ViewChild, TemplateRef } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
+import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
 import { COMMON_IMPORTS } from './shared-imports';
 import { ApiService } from './api.service';
 import { LanguageService } from './services/language.service';
@@ -10,7 +11,7 @@ import { ThemeService } from './services/theme.service';
 @Component({
     selector: 'app-root',
     standalone: true,
-    imports: [RouterModule, NzLayoutModule, ...COMMON_IMPORTS],
+    imports: [RouterModule, NzLayoutModule, NzModalModule, ...COMMON_IMPORTS],
     template: `
         <nz-layout class="app-layout" *transloco="let t">
             <nz-sider nzCollapsible [nzCollapsed]="isCollapsed()" [nzTrigger]="null" nzWidth="200px"
@@ -135,6 +136,8 @@ export class AppComponent implements OnInit {
     apiService = inject(ApiService);
     langService = inject(LanguageService);
     themeService = inject(ThemeService);
+    modalService = inject(NzModalService);
+
     isCollapsed = signal(localStorage.getItem('siderCollapsed') === 'true');
 
     constructor() {
@@ -154,6 +157,20 @@ export class AppComponent implements OnInit {
             if (settings?.language) {
                 this.langService.setLanguage(settings.language);
             }
+        }).catch((err) => {
+            console.error('Failed to get app info:', err);
+            
+            const errStr = err?.message || String(err);
+            
+            this.modalService.error({
+                nzTitle: 'Unable to connect to server',
+                nzContent: errStr,
+                nzWidth: 600,
+                nzOkText: 'Refresh',
+                nzOnOk: () => { window.location.reload(); },
+                nzMaskClosable: false,
+                nzClosable: false
+            });
         });
     }
 }
