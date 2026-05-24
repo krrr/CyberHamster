@@ -21,6 +21,7 @@ import { NzTagModule } from 'ng-zorro-antd/tag';
                 [nzLabelRender]="renderTpl"
                 [nzOptionRender]="optionTpl"
                 [nzSize]="size()"
+                [nzChangeOn]="cascaderChangeOn"
             />
         </ng-container>
         <ng-template #renderTpl let-labels="labels" let-selectedOptions="selectedOptions">
@@ -79,6 +80,11 @@ export class VariableSelectorComponent {
     availableVariables = computed(() => {
         return this.editorService.getAvailableVariables(this.nodeId());
     });
+
+    cascaderChangeOn(option: any, index: number) {
+        // allow select parent option
+        return true;
+    }
 
     options = computed<NzCascaderOption[]>(() => {
         const vars = this.availableVariables();
