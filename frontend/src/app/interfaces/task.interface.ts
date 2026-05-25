@@ -2,6 +2,7 @@ export interface Task {
     id?: number;
     name: string;
     description?: string;
+    input_schema?: any;
     icon?: string;
     json_data?: any;
     created_at?: string;

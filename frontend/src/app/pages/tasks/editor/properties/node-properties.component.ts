@@ -14,6 +14,7 @@ import { PropsFileOperationComponent } from './props-file-operation.component';
 import { PropsMetadataWriteComponent } from './props-metadata-write.component';
 import { PropsCallTaskComponent } from './props-call-task.component';
 import { PropsFinishComponent } from './props-finish.component';
+import { PropsStartComponent } from './props-start.component';
 import { COMMON_IMPORTS } from '../../../../shared-imports';
 
 @Component({
@@ -34,6 +35,7 @@ import { COMMON_IMPORTS } from '../../../../shared-imports';
         PropsMetadataWriteComponent,
         PropsCallTaskComponent,
         PropsFinishComponent,
+        PropsStartComponent,
         ...COMMON_IMPORTS
     ],
     template: `
@@ -71,6 +73,9 @@ import { COMMON_IMPORTS } from '../../../../shared-imports';
                     <div class="divider-title">{{ t('editor.configuration') }}</div>
                     <div class="ant-form">
                         @switch (node().type) {
+                            @case ('StartNode') {
+                                <app-props-start [nodeId]="node().id" />
+                            }
                             @case ('MetadataReadNode') {
                                 <app-read-input-props [nodeId]="node().id" />
                             }

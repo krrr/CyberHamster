@@ -1,6 +1,6 @@
 <div class="editor-container" *transloco="let t">
     <div class="toolbar">
-        <span style="font-size: 16px">{{ task()?.name }}</span>
+        <span style="font-size: 16px">{{ editorService.currentTask()?.name }}</span>
         <div style="flex-grow: 1"></div>
         <button nz-button nzType="primary" (click)="saveDag()"><span nz-icon nzType="save"></span>{{ t('editor.save') }}</button>
         <button nz-button nzType="default" (click)="showExecuteModal()"><nz-icon nzType="bug"/> {{ t('editor.run') }}</button>

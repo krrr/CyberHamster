@@ -80,7 +80,8 @@ def update_autostart_registry(enable: bool):
 class ExecutionRequest(BaseModel):
     task: Dict[str, Any] = None
     task_id: int = None
-    file_path: str
+    file_path: Optional[str] = None
+    # input_params: Optional[Dict[str, Any]] = None
 
 # Schema for Folder API
 class FolderCreate(BaseModel):
@@ -93,7 +94,7 @@ async def execute_task_endpoint(request: ExecutionRequest, background_tasks: Bac
     """
     Endpoint to trigger Task execution.
     """
-    if not os.path.exists(request.file_path):
+    if request.file_path and not os.path.exists(request.file_path):
         return JSONResponse(status_code=400, content={"error": "File not found"})
 
     task_json = request.task
@@ -111,7 +112,7 @@ async def execute_task_endpoint(request: ExecutionRequest, background_tasks: Bac
     record_id = executor.create_exec_record(request.file_path, os.path.getsize(request.file_path)).id
 
     # Use BackgroundTasks to run executor
-    background_tasks.add_task(executor.execute_with_file, request.file_path, record_id)
+    background_tasks.add_task(executor.execute_task_file, request.file_path, record_id)
 
     return {"status": "started", "message": "Task execution started", "record_id": record_id}
 

@@ -31,9 +31,10 @@
 .nz-popover-no-padding .ant-popover-inner-content {
     padding: 0;
 }
-.ant-dropdown-menu {
+.ant-dropdown-menu, .ant-cascader-menu-item {
     user-select: none;
 }
+
 
 .icon-only-btn {
     background: none;

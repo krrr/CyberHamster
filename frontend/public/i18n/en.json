@@ -115,7 +115,8 @@
     "general": "General",
     "view": "View",
     "var": "Variable",
-    "none":"None"
+    "none":"None",
+    "data_type": "Data Type"
   },
   "file_dialog": {
     "select_folder": "Select Folder",
@@ -143,6 +144,7 @@
     "delete": "Delete",
     "change_type": "Change Type",
     "node_properties": "Node Properties",
+    "task_properties": "Task Properties",
     "type": "Type",
     "name": "Name",
     "configuration": "Configuration",
@@ -217,7 +219,16 @@
     "remove_tag": "Remove Tag",
     "tag": "Tag",
     "value": "Value",
-    "task": "Task"
+    "task": "Task",
+    "builtin_file": "Built-in File",
+    "input_parameters": "Input Parameters",
+    "custom_param": "Custom Parameter",
+    "param_name": "Parameter Name",
+    "add_param": "Add Parameter",
+    "parameter_mapping": "Parameter Mapping",
+    "type_variable": "Variable",
+    "type_literal": "Literal",
+    "start_node_info": "Input parameters are in the task properties panel"
   },
   "node": {
     "footer": {

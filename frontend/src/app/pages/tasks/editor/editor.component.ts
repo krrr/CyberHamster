@@ -71,7 +71,6 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
     bgPattern = signal<string>('');
     private lastSavedSnapshot: string = '';
 
-    task = signal<any>(null);
     taskId?: number;
     arrange!: AutoArrangePlugin<any>;
     zoomLevel = signal<number>(100);
@@ -126,7 +125,7 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
         if (!tid) return;
         try {
             const task = await lastValueFrom(this.apiService.getTask(tid));
-            this.task.set(task);
+            this.editorService.currentTask.set(task);
             await this.editorService.loadDag(task, true);
             this.selectedNode.set(null);
             // Record the initial state
@@ -475,11 +474,14 @@ export class EditorComponent implements AfterViewInit, OnInit, OnDestroy {
 
         const dagJson = this.editorService.serializeDag();
         try {
-            await lastValueFrom(this.apiService.updateTask(this.taskId, { json_data: dagJson }))
+            await lastValueFrom(this.apiService.updateTask(this.taskId, { 
+                json_data: dagJson,
+                input_schema: this.editorService.currentTask()?.input_schema
+            }))
             this.message.success(this.translocoService.translate('editor.msg_task_saved'));
             this.lastSavedSnapshot = JSON.stringify(dagJson);
         } catch (e: any) {
-            this.message.error(e.error.detail);
+            this.message.error(e.error?.detail || e.error);
         }
     }
 

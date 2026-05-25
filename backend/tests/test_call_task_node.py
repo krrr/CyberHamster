@@ -63,7 +63,7 @@ def test_call_task_node_execution(session, dummy_image):
     }
 
     executor = TaskExecutor(main_dag)
-    success = executor.execute_with_file(dummy_image)
+    success = executor.execute_task_file(dummy_image)
     
     assert success is True
 
@@ -86,7 +86,7 @@ def test_call_task_node_with_cache(session, dummy_image):
         "start_node": "m",
         "nodes": {
             "m": {"type": "StartNode", "name": "M", "config": {}},
-            "c": {"type": "CallTaskNode", "name": "C", "config": {"task_id": 202}},
+            "c": {"type": "CallTaskNode", "name": "C", "config": {"task_id": 202, "input_file_var": "m:file"}},
             "mf": {"type": "FinishNode", "name": "MF", "config": {}}
         },
         "edges": [
@@ -97,7 +97,7 @@ def test_call_task_node_with_cache(session, dummy_image):
 
     # If it uses cache, it shouldn't hit the DB (which would fail as task 202 is missing)
     executor = TaskExecutor(main_dag, task_cache=cache)
-    success = executor.execute_with_file(dummy_image)
+    success = executor.execute_task_file(dummy_image)
     assert success is True
 
 @patch("graphlux.engine.nodes.engine", engine)
@@ -134,3 +134,55 @@ def test_preload_tasks_recursive(session):
     assert 303 in cache
     assert cache[302] == sub_dag
     assert cache[303] == sub_sub_dag
+
+@patch("graphlux.engine.nodes.engine", engine)
+def test_call_task_node_parameter_mapping(session, dummy_image):
+    # Sub-task DAG that uses a custom parameter "quality"
+    sub_dag = {
+        "start_node": "s",
+        "nodes": {
+            "s": {"type": "StartNode", "name": "S", "config": {}},
+            "ce": {
+                "type": "CodeEvalNode", 
+                "name": "Check Param", 
+                "config": {"code": "args['s:quality'] * 2", "output_var": "q_res"}
+            },
+            "f": {"type": "FinishNode", "name": "F", "config": {"result_var": "ce:q_res"}}
+        },
+        "edges": [
+            {"source": "s", "target": "ce", "branch": "default"},
+            {"source": "ce", "target": "f", "branch": "default"}
+        ]
+    }
+    
+    session.add(Task(id=404, name="ParamTask", json_data=sub_dag))
+    session.commit()
+    
+    main_dag = {
+        "start_node": "m",
+        "nodes": {
+            "m": {"type": "StartNode", "name": "M", "config": {}},
+            "c": {
+                "type": "CallTaskNode", 
+                "name": "C", 
+                "config": {
+                    "task_id": 404,
+                    "input_file_var": "m:file",
+                    "parameter_mapping": {
+                        "quality": {"type": "literal", "value": 50}
+                    }
+                }
+            },
+            "mf": {"type": "FinishNode", "name": "MF", "config": {"result_var": "c:result"}}
+        },
+        "edges": [
+            {"source": "m", "target": "c", "branch": "default"},
+            {"source": "c", "target": "mf", "branch": "default"}
+        ]
+    }
+
+    executor = TaskExecutor(main_dag)
+    success, output = executor.execute({"file": {"path": dummy_image, "size": 100}})
+    
+    assert success is True
+    assert output.get("result") == 100

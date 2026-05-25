@@ -61,11 +61,11 @@ export class CustomNodeComponent implements OnChanges {
         const config = (this.data as any).customConfig || {};
 
         if (info?.footerKeys) {
-            return info.footerKeys.filter((key) => config[key] !== undefined && config[key] !== null && config[key] !== '');
+            return info.footerKeys.filter((key) => !!config[key]);
         }
 
         return Object.keys(config)
-            .filter((key) => config[key] !== undefined && config[key] !== null && config[key] !== '')
+            .filter((key) => !!config[key])
             .slice(0, 3); // show up to 3 properties
     }
 
@@ -85,21 +85,8 @@ export class CustomNodeComponent implements OnChanges {
     }
 
     getConfigKeyLabel(key: string): string {
-        const labels: Record<string, string> = {
-            input_file_var: 'input',
-            target_file_var: 'target',
-            result_var: 'result',
-            read_single_tag: 'tag',
-            target_extension: 'ext',
-            output_var: 'output',
-            relation: 'logic',
-            action: 'action',
-            format: 'format',
-            extension: 'ext',
-            tool: 'tool'
-        };
-        const shortKey = labels[key] || key;
-        return this.translocoService.translate('node.footer.' + shortKey);
+        let transKey = CONFIG_KEY_LABEL[key] || key;
+        return this.translocoService.translate(transKey);
     }
 
     getConfigValue(key: string) {
@@ -139,3 +126,19 @@ export class CustomNodeComponent implements OnChanges {
         requestAnimationFrame(() => this.rendered());
     }
 }
+
+
+const CONFIG_KEY_LABEL: Record<string, string> = {
+    input_file_var: 'node.footer.input',
+    target_file_var: 'node.footer.target',
+    result_var: 'node.footer.result',
+    read_single_tag: 'node.footer.tag',
+    target_extension: 'node.footer.ext',
+    output_var: 'node.footer.output',
+    relation: 'node.footer.logic',
+    action: 'node.footer.action',
+    format: 'node.footer.format',
+    extension: 'node.footer.ext',
+    tool: 'node.footer.tool',
+    task_id: 'props.task',
+};

@@ -72,7 +72,8 @@ describe('EditorComponent', () => {
     it('should save DAG', async () => {
         await component.saveDag();
         expect(apiServiceSpy.updateTask).toHaveBeenCalledWith(1, {
-            json_data: { nodes: {}, edges: [], start_node: null }
+            json_data: { nodes: {}, edges: [], start_node: null },
+            input_schema: undefined
         });
         expect(messageServiceSpy.success).toHaveBeenCalledWith('Task saved successfully');
     });

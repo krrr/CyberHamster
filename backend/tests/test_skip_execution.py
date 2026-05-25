@@ -43,7 +43,7 @@ def test_finish_node_skip(session):
     records_before = session.exec(select(ExecutionRecord).where(ExecutionRecord.task_id == task.id)).all()
     assert len(records_before) == 0
     
-    success = executor.execute_with_file(dummy_file)
+    success = executor.execute_task_file(dummy_file)
     assert success is True
     
     # 3. Verify record was created then deleted
@@ -86,7 +86,7 @@ def test_code_eval_skip(session):
     dummy_file = os.path.join(os.path.dirname(__file__), "files", "test.jpg")
     executor = TaskExecutor(dag_json, task_id=task.id)
     
-    success = executor.execute_with_file(dummy_file)
+    success = executor.execute_task_file(dummy_file)
     assert success is True
     
     # 3. Verify record was deleted

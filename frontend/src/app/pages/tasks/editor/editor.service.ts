@@ -22,6 +22,7 @@ export class EditorService {
     message = inject(NzMessageService);
     change$ = new Subject<void>();
     translocoService = inject(TranslocoService);
+    currentTask = signal<any>(null);
 
     // History state
     undoStack = signal<string[]>([]);
@@ -187,6 +188,11 @@ export class EditorService {
 
                 if (sourceNode?.type === 'StartNode') {
                     addVar('file', 'file');
+                    const task = this.currentTask();
+                    const params = task?.input_schema?.parameters || [];
+                    params.forEach((p: any) => {
+                        if (p.name) addVar(p.name, p.type || 'any');
+                    });
                 } else if (sourceNode?.type === 'CodeEvalNode') {
                     addVar(sourceConfig?.config?.output_var || 'eval_result', 'any');
                 } else if (sourceNode?.type === 'MetadataReadNode') {
@@ -302,6 +308,7 @@ export interface NodeInfo {
 export const NODE_INFO: Record<string, NodeInfo> = {
     StartNode: {
         icon: 'home', color: '#2b90ee', label: 'Start',
+        footerKeys: [],
         outputVar: 'file'
     },
     FinishNode: {

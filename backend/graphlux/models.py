@@ -28,6 +28,7 @@ class Task(SQLModel, table=True):
     description: Optional[str] = None
     icon: Optional[str] = None
     json_data: Dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    input_schema: Optional[Dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

@@ -36,17 +36,7 @@ class DAGNode:
     def get_input_file(self, inputs: NodeInputs) -> Optional[FileObject]:
         """Helper to get the input file object based on config or default."""
         input_var = self.config.get("input_file_var")
-        if input_var:
-            return inputs.get(input_var)
-        
-        # Fallback: if there's only one variable ending with ':file', use it.
-        # This helps with transitions or simple chains.
-        file_vars = [v for k, v in inputs.items() if k.split(':')[-1] == 'file']
-        if len(file_vars) == 1:
-            return file_vars[0]
-        
-        # Last resort for StartNode or manual injections
-        return inputs.get("file")
+        return inputs.get(input_var) if input_var else None
 
     def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         """
@@ -65,15 +55,12 @@ class DAGNode:
         return value
 
 class StartNode(DAGNode):
-    """Start node. Passes the initial file to downstream."""
+    """Start node. Passes the initial parameters to downstream."""
     def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-        # For the start node, the input is provided directly by the executor as "file"
-        file_obj = inputs.get("file")
-        if not file_obj:
-            logger.error(f"[{self.name}] No input file provided to StartNode.")
-            return False, None, {}
-
-        return True, "default", {"file": file_obj}
+        # For the start node, the input is provided directly by the executor
+        # It may contain 'file' and other input_params
+        output_data = inputs.to_dict()
+        return True, "default", output_data
 
 
 class FinishNode(DAGNode):
@@ -355,7 +342,7 @@ class CodeEvalNode(DAGNode):
             return True, "default", {output_var: result}
 
         except Exception as e:
-            logger.error(f"[{self.name}] Code evaluation failed: {e}")
+            logger.error(f"[{self.name}] Code evaluation failed: {type(e).__name__} {e}")
             return False, None, {}
 
 
@@ -392,8 +379,22 @@ class CallTaskNode(DAGNode):
         file_path = file_obj.get("path", "") if file_obj else ""
 
         logger.info(f"[{self.name}] Calling subtask {task_id} ('{task_name}') for file: {file_path}")
-        inputs = {'file': file_obj}
-        success, output_data = executor.execute(inputs=inputs, context=context)
+        
+        # Prepare inputs for the subtask
+        subtask_inputs = {'file': file_obj}
+        
+        # Apply parameter mapping
+        mapping = self.config.get("parameter_mapping", {})
+        for target_var, mapping_info in mapping.items():
+            m_type = mapping_info.get("type")
+            m_value = mapping_info.get("value")
+            
+            if m_type == "variable":
+                subtask_inputs[target_var] = inputs.get(m_value)
+            elif m_type == "literal":
+                subtask_inputs[target_var] = m_value
+
+        success, output_data = executor.execute(inputs=subtask_inputs, context=context)
 
         if success:
             logger.info(f"[{self.name}] Subtask {task_id} completed successfully.")

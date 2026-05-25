@@ -82,7 +82,7 @@ class FolderEventHandler(FileSystemEventHandler):
             for tid, i in task_data:
                 executor = TaskExecutor(i, task_cache=self.task_cache, task_id=tid, folder_id=self.folder_id)
                 try:
-                    success = executor.execute_with_file(path)
+                    success = executor.execute_task_file(path)
                     if not success:
                         all_success = False
                 except Exception as e:

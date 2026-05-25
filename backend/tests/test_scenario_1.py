@@ -58,7 +58,7 @@ def test_scenario_1_success_branch(mock_write_meta, mock_imagemagick_run, mock_r
     mock_imagemagick_run.side_effect = side_effect_magick
     
     executor = TaskExecutor(SCENARIO_1_DAG)
-    executor.execute_with_file(dummy_image)
+    executor.execute_task_file(dummy_image)
     
     # The true branch (node_5) should have replaced the file
     base, _ = os.path.splitext(dummy_image)
@@ -84,7 +84,7 @@ def test_scenario_1_fail_branch(mock_write_meta, mock_imagemagick_run, mock_read
     mock_imagemagick_run.side_effect = side_effect_magick
     
     executor = TaskExecutor(SCENARIO_1_DAG)
-    executor.execute_with_file(dummy_image)
+    executor.execute_task_file(dummy_image)
     
     # It should have taken the false branch and called node_7 (MetadataWriteNode)
     mock_write_meta.assert_called_once_with(dummy_image, {"XMP:ProcessingStatus": "LowCompression_Skipped"})

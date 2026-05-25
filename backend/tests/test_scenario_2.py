@@ -58,7 +58,7 @@ def test_scenario_2_success(mock_write_meta, mock_ffmpeg_run, mock_read_meta, du
     mock_ffmpeg_run.side_effect = side_effect_ffmpeg
     
     executor = TaskExecutor(SCENARIO_2_DAG)
-    executor.execute_with_file(dummy_mp4)
+    executor.execute_task_file(dummy_mp4)
 
     # Assert ffmpeg was called with correct parsed args
     expected_args = ["-map", "0:v", "-map", "0:a:0", "-c:v", "copy", "-c:a", "aac", "-b:a", "128k"]

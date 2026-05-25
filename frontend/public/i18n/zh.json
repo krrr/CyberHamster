@@ -115,7 +115,8 @@
     "view": "查看",
     "var": "变量",
     "path": "路径",
-    "none": "无"
+    "none": "无",
+    "data_type": "数据类型"
   },
   "file_dialog": {
     "select_folder": "选择文件夹",
@@ -143,6 +144,7 @@
     "delete": "删除",
     "change_type": "更改类型",
     "node_properties": "节点属性",
+    "task_properties": "任务属性",
     "type": "类型",
     "name": "名称",
     "configuration": "配置",
@@ -217,7 +219,16 @@
     "remove_tag": "移除标签",
     "tag": "标签名",
     "value": "值",
-    "task": "任务"
+    "task": "任务",
+    "builtin_file": "内置文件",
+    "input_parameters": "输入参数",
+    "custom_param": "自定义参数",
+    "param_name": "参数名称",
+    "add_param": "添加参数",
+    "parameter_mapping": "参数映射",
+    "type_variable": "变量",
+    "type_literal": "固定值",
+    "start_node_info": "输入参数位于任务属性弹框内"
   },
   "node": {
     "footer": {

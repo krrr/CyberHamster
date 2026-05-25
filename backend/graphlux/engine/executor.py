@@ -94,7 +94,7 @@ class TaskExecutor:
                 
         return inputs
 
-    def create_exec_record(self, input_path, input_size):
+    def create_exec_record(self, input_path: str, input_size):
         with Session(engine) as session:
             record = ExecutionRecord(
                 task_id=self.task_id,
@@ -108,13 +108,8 @@ class TaskExecutor:
             session.refresh(record)
             return record
 
-    def execute_with_file(self, file_path: str, record_id: int = None) -> Any:
-        """
-        Execute the DAG for a given file.
-
-        :param file_path: Path to the original file.
-        :return: returned value by FinishNode
-        """
+    def execute_task_file(self, file_path: str, record_id: int = None):
+        """Execute with single file"""
         # Prepare the initial file object for the start node
         try:
             initial_file_obj = self.create_file_obj(file_path)
@@ -123,12 +118,20 @@ class TaskExecutor:
 
         logger.info(f"Starting DAG execution for file: '{file_path}'")
         inputs = {'file': initial_file_obj}
+        return self.execute_task(inputs, record_id)
 
+    def execute_task(self, arguments: Dict[str, Any], record_id: int = None) -> Any:
+        """
+        Execute the DAG for a given file or parameters.
+
+        :param arguments: input arguments.
+        :return: returned value by FinishNode
+        """
         # Insert execution record
         record = None
         if record_id is None and self.task_id is not None:
             try:
-                record = self.create_exec_record(file_path, initial_file_obj["size"])
+                record = self.create_exec_record(arguments['file']['path'], arguments['file']['size'])
                 record_id = record.id
             except Exception as e:
                 logger.error(f"Failed to create execution record: {e}")
@@ -139,7 +142,7 @@ class TaskExecutor:
         # Set record_id in contextvar for logging
         token = record_id_ctx.set(record_id)
         try:
-            success, output_data = self.execute(inputs)
+            success, output_data = self.execute(arguments)
         except Exception as e:
             logger.error(f"Execution failed: {e}")
         finally:
