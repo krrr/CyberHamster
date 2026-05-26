@@ -6,12 +6,13 @@ import { COMMON_IMPORTS } from './shared-imports';
 import { ApiService } from './api.service';
 import { LanguageService } from './services/language.service';
 import { ThemeService } from './services/theme.service';
+import { MatRippleModule } from './components/mat-ripple';
 
 
 @Component({
     selector: 'app-root',
     standalone: true,
-    imports: [RouterModule, NzLayoutModule, NzModalModule, ...COMMON_IMPORTS],
+    imports: [RouterModule, NzLayoutModule, NzModalModule, MatRippleModule, ...COMMON_IMPORTS],
     template: `
         <nz-layout class="app-layout" *transloco="let t">
                 <nz-sider nzCollapsible [nzCollapsed]="isCollapsed()" [nzTrigger]="null" nzWidth="200px"
@@ -28,19 +29,19 @@ import { ThemeService } from './services/theme.service';
                     </button>
                 </div>
                 <ul nz-menu nzMode="inline" [nzTheme]="themeService.isDark() ? 'dark' : 'light'">
-                    <li nz-menu-item nzMatchRouter routerLink="/tasks">
+                    <li nz-menu-item nzMatchRouter routerLink="/tasks" matRipple>
                         <nz-icon nzType="icon:task" />
                         <span> {{ t('menu.tasks') }}</span>
                     </li>
-                    <li nz-menu-item nzMatchRouter routerLink="/folders">
+                    <li nz-menu-item nzMatchRouter routerLink="/folders" matRipple>
                         <nz-icon nzType="folder-open" />
                         <span> {{ t('menu.folders') }}</span>
                     </li>
-                    <li nz-menu-item nzMatchRouter routerLink="/history">
+                    <li nz-menu-item nzMatchRouter routerLink="/history" matRipple>
                         <nz-icon nzType="history" />
                         <span> {{ t('menu.history') }}</span>
                     </li>
-                    <li nz-menu-item nzMatchRouter routerLink="/settings">
+                    <li nz-menu-item nzMatchRouter routerLink="/settings" matRipple>
                         <nz-icon nzType="setting" />
                         <span > {{ t('menu.settings') }}</span>
                     </li>

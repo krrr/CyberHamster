@@ -50,7 +50,7 @@ def get_chrome_path():
 def open_browser(url):
     chrome_path = get_chrome_path()
     if chrome_path:
-        subprocess.Popen([chrome_path, f"--app={url}", "--window-size=1440,900"])
+        subprocess.Popen([chrome_path, f"--app={url}", "--user-data-dir=./chrome_data", "--new-window"])
     else:
         webbrowser.open(url)
 
@@ -87,6 +87,7 @@ def main():
         os._exit(0)  # Force exit to cleanly kill the uvicorn daemon thread
 
     def setup_tray():
+        # my custom pystray added ability to read icon from file
         icon = pystray.Icon("Graphlux", 'scripts/app.ico', "Graphlux", menu=pystray.Menu(
             MenuItem('Open', show_window, default=True),
             MenuItem('Quit', quit_app)
