@@ -6,12 +6,11 @@ from typing import Dict, Any, List, Optional
 logger = logging.getLogger('engine')
 
 
-class FileContext:
-    def __init__(self, record_id: int = None):
+class ExecContext:
+    def __init__(self):
         """
-        Initialize the context for processing a single file.
+        Initialize the context for running single DAG.
         """
-        self.record_id = record_id
         self.temp_files: List[str] = []
         self.outputs: Dict[str, Dict[str, Any]] = {}
 

@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional, Tuple, TypedDict
 from sqlmodel import Session
 
 from . import SIGNAL_SKIP
-from .context import FileContext, NodeInputs
+from .context import ExecContext, NodeInputs
 from ..tools.ffmpeg_wrapper import FFmpegWrapper
 from ..tools.pyexiv2_wrapper import Pyexiv2Wrapper
 from ..tools.imagemagick_wrapper import ImageMagickWrapper
@@ -38,7 +38,7 @@ class DAGNode:
         input_var = self.config.get("input_file_var")
         return inputs.get(input_var) if input_var else None
 
-    def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         """
         Execute the node logic.
         :param inputs: A dictionary of inputs gathered from upstream nodes.
@@ -56,7 +56,7 @@ class DAGNode:
 
 class StartNode(DAGNode):
     """Start node. Passes the initial parameters to downstream."""
-    def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         # For the start node, the input is provided directly by the executor
         # It may contain 'file' and other input_params
         output_data = inputs.to_dict()
@@ -65,7 +65,7 @@ class StartNode(DAGNode):
 
 class FinishNode(DAGNode):
     """End node. Represents successful completion of the DAG."""
-    def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         result = None
         result_var = self.config.get("result_var")
         if not result_var:
@@ -78,7 +78,7 @@ class FinishNode(DAGNode):
 
 class MetadataReadNode(DAGNode):
     """Reads metadata, stops if already processed."""
-    def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         file_obj = self.get_input_file(inputs)
         if not file_obj or "path" not in file_obj:
             logger.error(f"[{self.name}] No valid input file object provided.")
@@ -105,7 +105,7 @@ class MetadataReadNode(DAGNode):
 
 class ConvertNode(DAGNode):
     """Converts image format."""
-    def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         file_obj = self.get_input_file(inputs)
         if not file_obj or "path" not in file_obj:
             logger.error(f"[{self.name}] No valid input file object provided.")
@@ -155,7 +155,7 @@ class ConvertNode(DAGNode):
 
 class ConditionNode(DAGNode):
     """Evaluates multiple conditions and branches."""
-    def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         conditions = self.config.get("conditions", [])
         relation = self.config.get("relation", "and")
         
@@ -214,7 +214,7 @@ class ConditionNode(DAGNode):
 
 class FileOperationNode(DAGNode):
     """Moves, deletes, or overwrites files."""
-    def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         # Source file (the one we are moving/using)
         file_obj = self.get_input_file(inputs)
         if not file_obj or "path" not in file_obj:
@@ -285,7 +285,7 @@ class FileOperationNode(DAGNode):
 
 class MetadataWriteNode(DAGNode):
     """Writes metadata tags."""
-    def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         # Free choice of target file from variables
         target_var = self.config.get("target_file_var")
         file_obj = inputs.get(target_var) if target_var else self.get_input_file(inputs)
@@ -312,7 +312,7 @@ class MetadataWriteNode(DAGNode):
 
 class CodeEvalNode(DAGNode):
     """Evaluates Python code. Similar to a multi-line lambda, returning the last expression's result. Reads variables via args."""
-    def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         code_str = self.config.get("code", "")
         output_var = self.config.get("output_var", "eval_result")
 
@@ -348,7 +348,7 @@ class CodeEvalNode(DAGNode):
 
 class CallTaskNode(DAGNode):
     """Executes another task as a sub-DAG."""
-    def execute(self, inputs: NodeInputs, context: FileContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         task_id = self.config.get("task_id")
         if not task_id:
             logger.error(f"[{self.name}] No task_id configured.")
@@ -394,7 +394,7 @@ class CallTaskNode(DAGNode):
             elif m_type == "literal":
                 subtask_inputs[target_var] = m_value
 
-        success, output_data = executor.execute(inputs=subtask_inputs, context=context)
+        success, output_data = executor.execute(inputs=subtask_inputs)
 
         if success:
             logger.info(f"[{self.name}] Subtask {task_id} completed successfully.")

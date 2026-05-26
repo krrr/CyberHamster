@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from sqlmodel import Session
 
 from . import SIGNAL_VAR_SKIP, SIGNAL_SKIP
-from .context import FileContext, NodeInputs
+from .context import ExecContext, NodeInputs
 from .nodes import NODE_TYPES, StartNode, FinishNode
 from ..logger import record_id_ctx
 from ..db import engine
@@ -66,7 +66,7 @@ class TaskExecutor:
                 self.reverse_edges[target] = []
             self.reverse_edges[target].append((source, branch))
 
-    def _build_inputs_for_node(self, node_id: str, context: FileContext) -> NodeInputs:
+    def _build_inputs_for_node(self, node_id: str, context: ExecContext) -> NodeInputs:
         """Collect and merge outputs from all ancestor nodes using node_id:var_name format."""
         inputs = NodeInputs(self._fixed_inputs)
         
@@ -196,7 +196,7 @@ class TaskExecutor:
         }
         return file_obj
 
-    def execute(self, inputs: Dict[str, Any], context: FileContext = None) -> Tuple[bool, Dict[str, Any]]:
+    def execute(self, inputs: Dict[str, Any], context: ExecContext = None) -> Tuple[bool, Dict[str, Any]]:
         """
         Execute the DAG.
         
@@ -205,7 +205,7 @@ class TaskExecutor:
         :return: (success, last_node_output)
         """
         if context is None:
-            context = FileContext()
+            context = ExecContext()
 
         inputs = NodeInputs(inputs)
         current_node_id = self.start_node_id
