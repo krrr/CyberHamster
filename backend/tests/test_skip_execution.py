@@ -25,7 +25,7 @@ def test_finish_node_skip(session):
             }
         },
         "edges": [
-            {"source": "start", "target": "finish"}
+            {"source": "start", "target": "finish", "branch": "default"}
         ]
     }
     
@@ -35,20 +35,25 @@ def test_finish_node_skip(session):
     session.commit()
     session.refresh(task)
     
-    # 2. Execute
-    dummy_file = os.path.join(os.path.dirname(__file__), "files", "test.jpg")
-    executor = TaskExecutor(dag_json, task_id=task.id)
-    
-    # Before execution, no records
-    records_before = session.exec(select(ExecutionRecord).where(ExecutionRecord.task_id == task.id)).all()
-    assert len(records_before) == 0
-    
-    success = executor.execute_task_file(dummy_file)
-    assert success is True
-    
-    # 3. Verify record was created then deleted
-    records_after = session.exec(select(ExecutionRecord).where(ExecutionRecord.task_id == task.id)).all()
-    assert len(records_after) == 0
+    try:
+        # 2. Execute
+        dummy_file = os.path.join(os.path.dirname(__file__), "files", "test.jpg")
+        executor = TaskExecutor(dag_json, task_id=task.id)
+        
+        # Before execution, no records
+        records_before = session.exec(select(ExecutionRecord).where(ExecutionRecord.task_id == task.id)).all()
+        assert len(records_before) == 0
+        
+        success = executor.execute_task_file(dummy_file)
+        assert success is True
+        
+        # 3. Verify record was created then deleted
+        records_after = session.exec(select(ExecutionRecord).where(ExecutionRecord.task_id == task.id)).all()
+        assert len(records_after) == 0
+    finally:
+        session.delete(task)
+        session.commit()
+
 
 def test_code_eval_skip(session):
     # 1. Setup a DAG where CodeEval returns SKIP_EXECUTION
@@ -71,8 +76,8 @@ def test_code_eval_skip(session):
             }
         },
         "edges": [
-            {"source": "start", "target": "eval"},
-            {"source": "eval", "target": "finish"}
+            {"source": "start", "target": "eval", "branch": "default"},
+            {"source": "eval", "target": "finish", "branch": "default"}
         ]
     }
     
@@ -82,13 +87,18 @@ def test_code_eval_skip(session):
     session.commit()
     session.refresh(task)
     
-    # 2. Execute
-    dummy_file = os.path.join(os.path.dirname(__file__), "files", "test.jpg")
-    executor = TaskExecutor(dag_json, task_id=task.id)
-    
-    success = executor.execute_task_file(dummy_file)
-    assert success is True
-    
-    # 3. Verify record was deleted
-    records_after = session.exec(select(ExecutionRecord).where(ExecutionRecord.task_id == task.id)).all()
-    assert len(records_after) == 0
+    try:
+        # 2. Execute
+        dummy_file = os.path.join(os.path.dirname(__file__), "files", "test.jpg")
+        executor = TaskExecutor(dag_json, task_id=task.id)
+        
+        success = executor.execute_task_file(dummy_file)
+        assert success is True
+        
+        # 3. Verify record was deleted
+        records_after = session.exec(select(ExecutionRecord).where(ExecutionRecord.task_id == task.id)).all()
+        assert len(records_after) == 0
+    finally:
+        session.delete(task)
+        session.commit()
+

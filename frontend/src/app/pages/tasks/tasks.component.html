@@ -35,7 +35,7 @@
                 <div style="margin-left: 10px; color: #595959">
                     @for (f of task.folders; track f) {
                         @let folder = folderMap().get(f.id);
-                        <nz-tag [title]="folder!.watch_folder">{{ folder!.name }}</nz-tag>
+                        <nz-tag [title]="folder?.watch_folder">{{ folder?.name }}</nz-tag>
                     }
                     @if (task.folders.length === 0) {
                         <div><i>{{ t('tasks.none') }}</i></div>

@@ -30,7 +30,8 @@ describe('TasksComponent', () => {
             getTasks: vi.fn().mockReturnValue(of(mockTasks)),
             createTask: vi.fn().mockReturnValue(of({})),
             updateTask: vi.fn().mockReturnValue(of({})),
-            deleteTask: vi.fn().mockReturnValue(of({}))
+            deleteTask: vi.fn().mockReturnValue(of({})),
+            getFolders: vi.fn().mockReturnValue(of([]))
         };
 
         modalServiceSpy = {
