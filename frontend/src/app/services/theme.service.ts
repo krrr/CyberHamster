@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Copyright (C) 2026  krrr
+//
 import { Injectable, Renderer2, RendererFactory2, Inject, signal, computed } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 

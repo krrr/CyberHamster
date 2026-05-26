@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Copyright (C) 2026 krrr
+#
 from typing import Optional, Any, Dict, List
 from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Column, JSON, Relationship

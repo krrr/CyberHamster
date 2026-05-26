@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Copyright (C) 2026  krrr
+//
 import { Directive, SimpleChanges, inject, Input, signal } from "@angular/core";
 import { EditorService } from "../editor.service";
 

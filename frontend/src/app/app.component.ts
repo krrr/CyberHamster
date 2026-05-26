@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Copyright (C) 2026  krrr
+//
 import { Component, inject, OnInit, signal, effect, computed, ViewChild, TemplateRef } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';

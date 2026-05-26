@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Copyright (C) 2026  krrr
+//
 import { Component, computed, effect, inject, input, OnDestroy, OnInit, signal } from '@angular/core';
 import { LogMessage } from '../../interfaces/log-message.interface';
 import { Subscription } from 'rxjs';

@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Copyright (C) 2026 krrr
+#
 
 __version__ = "0.1.0"
 DEFAULT_PORT = 41001

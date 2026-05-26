@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Copyright (C) 2026  krrr
+//
 import { Component, Input, HostBinding, ChangeDetectorRef, OnChanges } from '@angular/core';
 
 @Component({

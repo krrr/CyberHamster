@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Copyright (C) 2026  krrr
+//
   // 这里放每个测试几乎都会用到的基础 Mock
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { vi } from 'vitest';

@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Copyright (C) 2026  krrr
+//
 import { Component, inject, computed, input, output } from '@angular/core';
 import { EditorService, VAR_TYPE_INFO } from '../editor.service';
 import { COMMON_IMPORTS } from '../../../../shared-imports';

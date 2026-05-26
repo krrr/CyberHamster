@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Copyright (C) 2026  krrr
+//
 import { Component, Input } from '@angular/core';
 import { ClassicPreset } from 'rete';
 import { TaskConnection, TaskNode } from '../editor.service';

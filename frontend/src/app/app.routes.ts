@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Copyright (C) 2026  krrr
+//
 import { CanDeactivateFn, Routes } from '@angular/router';
 import { EditorComponent } from './pages/tasks/editor/editor.component';
 import { TasksComponent } from './pages/tasks/tasks.component';

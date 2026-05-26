@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Copyright (C) 2026  krrr
+//
 import { inject, Injectable, signal } from '@angular/core';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { ClassicPreset, NodeEditor } from 'rete';

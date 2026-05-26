@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// Copyright (C) 2026  krrr
+//
 import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { provideNzIcons } from 'ng-zorro-antd/icon';

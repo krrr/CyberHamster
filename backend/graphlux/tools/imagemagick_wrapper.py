@@ -1,3 +1,7 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Copyright (C) 2026 krrr
+#
 import subprocess
 import threading
 import queue
