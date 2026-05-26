@@ -22,7 +22,7 @@ SCENARIO_1_DAG = {
         "node_0": {"type": "StartNode", "name": "Start", "config": {}},
         "node_1": {"type": "MetadataReadNode", "name": "Read Metadata", "config": {"input_file_var": "node_0:file"}},
         "node_2": {"type": "ConvertNode", "name": "Convert AVIF", "config": {"input_file_var": "node_0:file", "tool": "imagemagick", "target_extension": ".avif"}},
-        "node_3": {"type": "CodeEvalNode", "name": "Calc Comp", "config": {"code": "import os\nos.path.getsize(args['node_2:file']['path']) / os.path.getsize(args['node_0:file']['path'])", "output_var": "compression_ratio"}},
+        "node_3": {"type": "CodeEvalNode", "name": "Calc Comp", "config": {"code": "import os\nos.path.getsize(args['node_2:file'].path) / os.path.getsize(args['node_0:file'].path)", "output_var": "compression_ratio"}},
         "node_4": {"type": "ConditionNode", "name": "Check Threshold", "config": {"relation": "and", "conditions": [{"variable": "node_3:compression_ratio", "operator": "<", "target": "0.8"}]}},
         "node_5": {"type": "FileOperationNode", "name": "Replace", "config": {"input_file_var": "node_2:file", "action": "overwrite", "target_file_var": "node_0:file", "target_extension": ".avif"}},
         "node_6": {"type": "FileOperationNode", "name": "Cleanup", "config": {"input_file_var": "node_2:file", "action": "cleanup"}},

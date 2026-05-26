@@ -4,10 +4,10 @@ import tempfile
 import ast
 import send2trash
 import logging
-from typing import Any, Dict, Optional, Tuple, TypedDict
+from typing import Any, Dict, Optional, Tuple
 from sqlmodel import Session
 
-from . import SIGNAL_SKIP
+from . import SIGNAL_SKIP, FileObj
 from .context import ExecContext, NodeInputs
 from ..tools.ffmpeg_wrapper import FFmpegWrapper
 from ..tools.pyexiv2_wrapper import Pyexiv2Wrapper
@@ -18,12 +18,6 @@ from ..models import Task
 
 logger = logging.getLogger('engine')
 
-class FileObject(TypedDict, total=False):
-    """Encapsulates a file being processed."""
-    path: str
-    size: int
-    metadata: Dict[str, Any]
-
 
 class DAGNode:
     """Base class for a node in the execution DAG."""
@@ -33,7 +27,7 @@ class DAGNode:
         self.config = config or {}
         self.task_cache = task_cache
     
-    def get_input_file(self, inputs: NodeInputs) -> Optional[FileObject]:
+    def get_input_file(self, inputs: NodeInputs) -> Optional[FileObj]:
         """Helper to get the input file object based on config or default."""
         input_var = self.config.get("input_file_var")
         return inputs.get(input_var) if input_var else None
@@ -80,11 +74,11 @@ class MetadataReadNode(DAGNode):
     """Reads metadata, stops if already processed."""
     def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         file_obj = self.get_input_file(inputs)
-        if not file_obj or "path" not in file_obj:
+        if not file_obj or not file_obj.path:
             logger.error(f"[{self.name}] No valid input file object provided.")
             return False, None, {}
 
-        file_path = file_obj["path"]
+        file_path = file_obj.path
         if not os.path.exists(file_path):
             logger.error(f"[{self.name}] Input file not found: '{file_path}'")
             return False, None, {}
@@ -107,11 +101,11 @@ class ConvertNode(DAGNode):
     """Converts image format."""
     def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         file_obj = self.get_input_file(inputs)
-        if not file_obj or "path" not in file_obj:
+        if not file_obj or not file_obj.path:
             logger.error(f"[{self.name}] No valid input file object provided.")
             return False, None, {}
 
-        input_file = file_obj["path"]
+        input_file = file_obj.path
         if not os.path.exists(input_file):
             logger.error(f"[{self.name}] Input file not found: '{input_file}'")
             return False, None, {}
@@ -145,9 +139,7 @@ class ConvertNode(DAGNode):
             
         if success:
             logger.info(f"[{self.name}] Conversion successful: {temp_path}")
-            new_file_obj = dict(file_obj)
-            new_file_obj["path"] = temp_path
-            new_file_obj["size"] = os.path.getsize(temp_path)
+            new_file_obj = FileObj.from_path(temp_path)
             return True, "default", {"file": new_file_obj}
         
         logger.error(f"[{self.name}] Conversion failed for {input_file}")
@@ -217,7 +209,7 @@ class FileOperationNode(DAGNode):
     def execute(self, inputs: NodeInputs, context: ExecContext) -> Tuple[bool, Optional[str], Dict[str, Any]]:
         # Source file (the one we are moving/using)
         file_obj = self.get_input_file(inputs)
-        if not file_obj or "path" not in file_obj:
+        if not file_obj or not file_obj.path:
             logger.error(f"[{self.name}] No valid input file object provided.")
             return False, None, {}
 
@@ -228,12 +220,12 @@ class FileOperationNode(DAGNode):
             target_var = self.get_config_value_required("target_file_var")
             target_obj = inputs.get(target_var) if target_var else None
             
-            if not target_obj or "path" not in target_obj:
+            if not target_obj or not target_obj.path:
                 logger.error(f"[{self.name}] No valid target file object found in variable '{target_var}'.")
                 return False, None, {}
 
-            current = file_obj["path"]
-            dest_path = target_obj["path"]
+            current = file_obj.path
+            dest_path = target_obj.path
 
             if not os.path.exists(current):
                 logger.error(f"[{self.name}] Source file for overwrite not found: {current}")
@@ -254,7 +246,7 @@ class FileOperationNode(DAGNode):
                             send2trash.send2trash(dest_path)
                         
                         # Update the path in the input object for downstream nodes
-                        file_obj["path"] = new_dest
+                        file_obj.path = new_dest
                     except OSError as e:
                         logger.error(f"[{self.name}] Failed to move file: {e}")
                         return False, None, {}
@@ -265,7 +257,7 @@ class FileOperationNode(DAGNode):
                             logger.info(f"[{self.name}] Moving existing target file to recycle bin: {dest_path}")
                             send2trash.send2trash(dest_path)
                         shutil.move(current, dest_path)
-                        file_obj["path"] = dest_path
+                        file_obj.path = dest_path
                     except OSError as e:
                         logger.error(f"[{self.name}] Failed to overwrite file: {e}")
                         return False, None, {}
@@ -290,12 +282,12 @@ class MetadataWriteNode(DAGNode):
         target_var = self.config.get("target_file_var")
         file_obj = inputs.get(target_var) if target_var else self.get_input_file(inputs)
 
-        if not file_obj or "path" not in file_obj:
+        if not file_obj or not file_obj.path:
             logger.error(f"[{self.name}] No valid target file object provided.")
             return False, None, {}
 
         tags = self.config.get("tags", {})
-        target_file = file_obj["path"]
+        target_file = file_obj.path
             
         if not os.path.exists(target_file):
             logger.error(f"[{self.name}] Target file for metadata write not found: '{target_file}'")
@@ -376,7 +368,7 @@ class CallTaskNode(DAGNode):
 
         # Determine the primary file path
         file_obj = self.get_input_file(inputs)
-        file_path = file_obj.get("path", "") if file_obj else ""
+        file_path = file_obj.path if file_obj else ""
 
         logger.info(f"[{self.name}] Calling subtask {task_id} ('{task_name}') for file: {file_path}")
         

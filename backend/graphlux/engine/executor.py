@@ -5,7 +5,7 @@ import logging
 from typing import Dict, Any, List, Optional, Tuple
 from sqlmodel import Session
 
-from . import SIGNAL_VAR_SKIP, SIGNAL_SKIP
+from . import SIGNAL_VAR_SKIP, SIGNAL_SKIP, FileObj
 from .context import ExecContext, NodeInputs
 from .nodes import NODE_TYPES, StartNode, FinishNode
 from ..logger import record_id_ctx
@@ -112,7 +112,7 @@ class TaskExecutor:
         """Execute with single file"""
         # Prepare the initial file object for the start node
         try:
-            initial_file_obj = self.create_file_obj(file_path)
+            initial_file_obj = FileObj.from_path(file_path)
         except Exception as e:
             raise RuntimeError(f"Failed to get info for '{file_path}': {e}")
 
@@ -173,13 +173,13 @@ class TaskExecutor:
                     if success and output_data:
                         # result_var in FinishNode can point to a file object
                         result = output_data.get("result")
-                        if isinstance(result, dict) and "path" in result and "size" in result:
-                            record.output_path = result["path"]
-                            record.output_size = result["size"]
-                        elif "file" in output_data and isinstance(output_data["file"], dict):
+                        if isinstance(result, FileObj):
+                            record.output_path = result.path
+                            record.output_size = result.size
+                        elif "file" in output_data and isinstance(output_data["file"], FileObj):
                             # Fallback if result is not set but 'file' is in output
-                            record.output_path = output_data["file"].get("path")
-                            record.output_size = output_data["file"].get("size")
+                            record.output_path = output_data["file"].path
+                            record.output_size = output_data["file"].size
 
                     session.add(record)
                     session.commit()
@@ -187,14 +187,6 @@ class TaskExecutor:
                 logger.error(f"Failed to update execution record: {e}")
 
         return success
-
-    def create_file_obj(self, file_path: str):
-        file_obj = {
-            "path": file_path,
-            "size": os.path.getsize(file_path) if os.path.exists(file_path) else 0,
-            "create_time": os.path.getctime(file_path),
-        }
-        return file_obj
 
     def execute(self, inputs: Dict[str, Any], context: ExecContext = None) -> Tuple[bool, Dict[str, Any]]:
         """

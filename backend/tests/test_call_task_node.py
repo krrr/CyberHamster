@@ -2,6 +2,7 @@ import pytest
 import os
 import tempfile
 from sqlmodel import Session, SQLModel, create_engine
+from graphlux.engine import FileObj
 from graphlux.engine.executor import TaskExecutor
 from graphlux.models import Task
 from graphlux.engine.nodes import CallTaskNode
@@ -182,7 +183,7 @@ def test_call_task_node_parameter_mapping(session, dummy_image):
     }
 
     executor = TaskExecutor(main_dag)
-    success, output = executor.execute({"file": {"path": dummy_image, "size": 100}})
+    success, output = executor.execute({"file": FileObj(path=dummy_image, size=100)})
     
     assert success is True
     assert output.get("result") == 100
