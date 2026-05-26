@@ -39,6 +39,8 @@
     "theme_system": "System",
     "interface": "Interface",
     "editor_bg": "Editor Background",
+    "sidebar_bg": "Sidebar Background",
+    "sidebar_bg_kanban": "Kanban",
     "external_tools": "External Tools",
     "performance": "Performance",
     "system": "System",

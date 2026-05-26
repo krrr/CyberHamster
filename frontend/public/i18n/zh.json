@@ -38,6 +38,8 @@
     "theme_system": "跟随系统",
     "interface": "界面",
     "editor_bg": "编辑器背景",
+    "sidebar_bg": "侧边栏背景",
+    "sidebar_bg_kanban": "看板",
     "external_tools": "外部工具",
     "performance": "性能",
     "system": "系统",

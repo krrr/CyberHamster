@@ -14,4 +14,5 @@ export interface SystemConfig {
     host: string | null;
     port: number;
     editor_bg: string;
+    sidebar_bg: string;
 }

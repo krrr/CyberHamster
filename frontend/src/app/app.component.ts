@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, effect, ViewChild, TemplateRef } from '@angular/core';
+import { Component, inject, OnInit, signal, effect, computed, ViewChild, TemplateRef } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NzLayoutModule } from 'ng-zorro-antd/layout';
 import { NzModalModule, NzModalService } from 'ng-zorro-antd/modal';
@@ -14,8 +14,8 @@ import { ThemeService } from './services/theme.service';
     imports: [RouterModule, NzLayoutModule, NzModalModule, ...COMMON_IMPORTS],
     template: `
         <nz-layout class="app-layout" *transloco="let t">
-            <nz-sider nzCollapsible [nzCollapsed]="isCollapsed()" [nzTrigger]="null" nzWidth="200px"
-            [nzTheme]="themeService.isDark() ? 'dark' : 'light'">
+                <nz-sider nzCollapsible [nzCollapsed]="isCollapsed()" [nzTrigger]="null" nzWidth="200px"
+                [nzTheme]="themeService.isDark() ? 'dark' : 'light'" [style.background-image]="sidebarBg()">
                 <div class="logo-div" [class.collapsed]="isCollapsed()">
                     <div class="logo-content">
                         <img src="favicon.svg" alt="Logo" style="height: 32px; margin-right: 8px;" />
@@ -66,14 +66,9 @@ import { ThemeService } from './services/theme.service';
             ::ng-deep .ant-menu-root {
                 border-right: none;
             }
-            background-image: url('public/kanban.svg');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: bottom;
-            // transition: background-color 0s;
-        }
-        .ant-layout-sider-collapsed {
-            background-image: none;      
         }
         .logo-div {
             margin-left: 24px;
@@ -139,6 +134,17 @@ export class AppComponent implements OnInit {
     modalService = inject(NzModalService);
 
     isCollapsed = signal(localStorage.getItem('siderCollapsed') === 'true');
+    sidebarBg = computed(() => {
+        if (this.isCollapsed()) {
+            return 'none';
+        }
+        const info = this.apiService.appInfoSignal();
+        const bg = info?.settings?.sidebar_bg;
+        if (bg === 'kanban') {
+            return "url('kanban.svg')";
+        }
+        return 'none';
+    });
 
     constructor() {
         effect(() => {
@@ -157,6 +163,7 @@ export class AppComponent implements OnInit {
             if (settings?.language) {
                 this.langService.setLanguage(settings.language);
             }
+
         }).catch((err) => {
             console.error('Failed to get app info:', err);
             
@@ -173,4 +180,6 @@ export class AppComponent implements OnInit {
             });
         });
     }
+
+
 }

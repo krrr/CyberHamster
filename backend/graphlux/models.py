@@ -60,6 +60,7 @@ class SettingsConfig(BaseModel):
     host: Optional[str] = None
     port: int = DEFAULT_PORT
     editor_bg: str = "grid"
+    sidebar_bg: str = "kanban"
 
 class SettingsResponse(SettingsConfig):
     id: int = 1

@@ -85,6 +85,9 @@ export class SettingsComponent implements OnInit {
             
             this.apiService.getAppInfo().then(info => {
                 info.settings = updated;
+                if (typeof this.apiService.appInfoSignal.set === 'function') {
+                    this.apiService.appInfoSignal.set({ ...info });
+                }
             });
             this.applySettings(updated);
 

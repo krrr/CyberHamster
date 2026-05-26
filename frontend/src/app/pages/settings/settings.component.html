@@ -53,6 +53,16 @@
                 </nz-form-control>
             </nz-form-item>
 
+            <nz-form-item>
+                <nz-form-label [nzSpan]="6" nzLabelAlign="left">{{ t('settings.sidebar_bg') }}</nz-form-label>
+                <nz-form-control [nzSpan]="6">
+                    <nz-select [ngModel]="settings().sidebar_bg" (ngModelChange)="updateField('sidebar_bg', $event)" name="sidebar_bg">
+                        <nz-option nzValue="kanban" [nzLabel]="t('settings.sidebar_bg_kanban')"/>
+                        <nz-option nzValue="none" [nzLabel]="t('common.none')"/>
+                    </nz-select>
+                </nz-form-control>
+            </nz-form-item>
+
             <nz-divider id="general_settings" [nzText]="t('common.general')" nzOrientation="left"/>
 
             <nz-form-item>
