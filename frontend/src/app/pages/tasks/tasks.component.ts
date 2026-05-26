@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../api.service';
 import { Router } from '@angular/router';
@@ -17,6 +17,8 @@ import { NzPopoverModule } from 'ng-zorro-antd/popover';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { TranslocoService } from '@jsverse/transloco';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Folder } from '../../interfaces/folder.interface';
 
 @Component({
     selector: 'app-tasks',
@@ -42,6 +44,9 @@ import { TranslocoService } from '@jsverse/transloco';
 })
 export class TasksComponent implements OnInit {
     tasks = signal<any[] | null>(null);
+    apiService = inject(ApiService);
+    folders = toSignal(this.apiService.getFolders(), { initialValue: [] as Folder[] });
+    folderMap = computed(() => new Map(this.folders().map((folder) => [folder.id, folder])));
 
     isModalVisible = signal(false);
     isEditing = signal(false);
@@ -50,7 +55,6 @@ export class TasksComponent implements OnInit {
     taskForm = signal<any>({});
 
     constructor(
-        private apiService: ApiService,
         private router: Router,
         private message: NzMessageService,
         private modal: NzModalService,

@@ -182,7 +182,7 @@ async def websocket_endpoint(websocket: WebSocket):
 def get_tasks(session: Session = Depends(get_session)):
     tasks = session.exec(select(Task).options(defer(Task.json_data), selectinload(Task.folders))).all()
     # 不用fastapi推荐的定义专用response_model的啰嗦写法
-    return [{**i.model_dump(), "folders": [f.model_dump(include=['name']) for f in i.folders]} for i in tasks]
+    return [{**i.model_dump(), "folders": [f.model_dump(include=['id']) for f in i.folders]} for i in tasks]
 
 @router.get("/tasks/{task_id}", response_model=Task)
 def get_task(task_id: int, session: Session = Depends(get_session)):
